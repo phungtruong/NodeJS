@@ -7,7 +7,7 @@ var socketio = require('socket.io')(server);
 server.listen(process.env.PORT || 7777);
 //get the request
 app.get('/', function(req,res){
-	res.sendFile(__dirname + '/index.html');
+	res.sendFile(__dirname + '/test.txt');
 });
 
 //socket io listen a connection event
