@@ -3,7 +3,7 @@ $connectstr_dbhost = '';
 $connectstr_dbname = '';
 $connectstr_dbusername = '';
 $connectstr_dbpassword = '';
-
+$response = array();
 foreach ($_SERVER as $key => $value) {
     if (strpos($key, "MYSQLCONNSTR_localdb") !== 0) {
         continue;
@@ -23,9 +23,10 @@ if (!$link) {
     echo "Debugging error: " . mysqli_connect_error() . PHP_EOL;
     exit;
 }
-
-echo "Success: A proper connection to MySQL was made! The my_db database is great." . PHP_EOL;
-echo "Host information: " . mysqli_get_host_info($link) . PHP_EOL;
-
+$response["host"] = $connectstr_dbhost;
+$response["name"] = $connectstr_dbhost;
+$response["username"] = $connectstr_dbhost;
+$response["password"] = $connectstr_dbhost;
 mysqli_close($link);
+echo json_encode($response);
 ?>
