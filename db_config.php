@@ -14,7 +14,11 @@ foreach ($_SERVER as $key => $value) {
     $connectstr_dbusername = preg_replace("/^.*User Id=(.+?);.*$/", "\\1", $value);
     $connectstr_dbpassword = preg_replace("/^.*Password=(.+?)$/", "\\1", $value);
 }
-
+$response["host"] = $connectstr_dbhost;
+$response["name"] = $connectstr_dbhost;
+$response["username"] = $connectstr_dbhost;
+$response["password"] = $connectstr_dbhost;
+echo json_encode($response);
 $link = mysqli_connect($connectstr_dbhost, $connectstr_dbusername, $connectstr_dbpassword,$connectstr_dbname);
 
 if (!$link) {
@@ -23,10 +27,6 @@ if (!$link) {
     echo "Debugging error: " . mysqli_connect_error() . PHP_EOL;
     exit;
 }
-$response["host"] = $connectstr_dbhost;
-$response["name"] = $connectstr_dbhost;
-$response["username"] = $connectstr_dbhost;
-$response["password"] = $connectstr_dbhost;
+
 mysqli_close($link);
-echo json_encode($response);
 ?>
