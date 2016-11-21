@@ -1,7 +1,7 @@
 production: {
      root: rootPath,
      app: {
-         name: 'express1'
+         name: 'sanachat'
      },
      port: process.env.port,
  }
