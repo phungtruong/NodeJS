@@ -61,7 +61,7 @@ app.post('/dang-nhap', function(req, res){
 });
 
 app.post('/get-user', function(req, res){
-	var IDuser = req.body.IDuser;
+	var IDuser = req.query.IDuser;
 	getUser(IDuser, function(result){
 		res.json(result);
 	});
