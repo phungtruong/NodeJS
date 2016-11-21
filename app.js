@@ -4,15 +4,13 @@ var app = express();
 var server = http.createServer(app);
 var socketio = require('socket.io')(server);
 var mysql = require('mysql');
-var bodyParser = require('body-parser');
 var fs = require('fs');
 var async = require('async');
-var im = require('imagemagick');
 var connect = require('connect');
-var db_host = 'localhost';
-var db_username = 'root';
-var db_password = '';
-var db_name = 'usermanage';
+var db_host = 'us-cdbr-iron-east-04.cleardb';
+var db_username = 'bb9ed0c0bb70ea';
+var db_password = '28087f2a';
+var db_name = 'heroku_7d627ea66222c76';
 app.use(express.static(__dirname + '/public'));
 app.use(connect.cookieParser());
 app.use(connect.logger('dev'));
@@ -27,8 +25,6 @@ server.listen(process.env.PORT || 7777);
 app.get('/', function(req,res){
 	res.sendFile(__dirname + '/index.html');
 });
-
-
 
 app.post('/dang-ky', function(req, res){
 	var taikhoan = {
