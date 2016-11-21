@@ -23,7 +23,9 @@ app.use(connect.urlencoded());
 server.listen(process.env.PORT || 7777);
 //get the request
 app.get('/', function(req,res){
-	res.sendFile(__dirname + '/index.html');
+	getUser(39, function(result){
+		res.json(result);
+	});
 });
 
 app.post('/dang-ky', function(req, res){
@@ -61,7 +63,7 @@ app.post('/dang-nhap', function(req, res){
 });
 
 app.post('/get-user', function(req, res){
-	var IDuser = req.query.IDuser;
+	var IDuser = req.body.IDuser;
 	getUser(IDuser, function(result){
 		res.json(result);
 	});
