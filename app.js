@@ -1623,6 +1623,7 @@ function listAllRoom(IDuser,callback)
 									var avatarRoom = rowsUser[0].avatar;
 									var lastMessage = msg.Message;
 									var lastMessageTime = msg.Time;
+									var lastTime = msg.Time;
 									var countUserInRoom = rowsUser.length + 1;
 									parseDateToMili(lastMessageTime, function(mili){
 										var object = {
@@ -1631,7 +1632,8 @@ function listAllRoom(IDuser,callback)
 										avatarRoom  	: avatarRoom,
 										lastMessage 	: lastMessage,
 										countUserInRoom : countUserInRoom,
-										lastMessageTime : mili
+										lastMessageTime : mili,
+										lastTime        : lastTime
 										};
 									arr.push(object);
 									cb();
@@ -1649,16 +1651,14 @@ function listAllRoom(IDuser,callback)
 						//group chat
 						var IDRoom = item._IDRoom;
 						getRoom(IDRoom, function(rowsRoom){
-							isRoomHaveMessage(IDRoom, function(result){
-								if (result)
-								{
-									getLastMessageInRoom(rowsRoom[0]._ID, function(msg){
+							getLastMessageInRoom(rowsRoom[0]._ID, function(msg){
 										var IDRoom = rowsRoom[0]._ID;
 										var nameRoom = rowsRoom[0].name;
 										var avatarRoom = null;
 										var lastMessage = msg.Message;
 										var countUserInRoom = rowsUser.length + 1;
 										var lastMessageTime = msg.Time;
+										var lastTime = msg.Time;
 										parseDateToMili(lastMessageTime, function(mili){
 											var object = {
 											IDRoom      	: IDRoom,
@@ -1666,35 +1666,18 @@ function listAllRoom(IDuser,callback)
 											avatarRoom  	: avatarRoom,
 											lastMessage 	: lastMessage,
 											countUserInRoom : countUserInRoom,
-											lastMessageTime : mili
+											lastMessageTime : mili,
+											lastTime        : lastTime
 											};
 											arr.push(object);
 											cb();
 										});
-									});
-								}
-								else
-								{
-									var IDRoom = rowsRoom[0]._ID;
-									var nameRoom = rowsRoom[0].name;
-									var avatarRoom = null;
-									var countUserInRoom = rowsUser.length + 1;
-									var object = {
-										IDRoom     : IDRoom,
-										nameRoom   : nameRoom,
-										avatarRoom : avatarRoom,
-										lastMessage : ' ',
-										countUserInRoom : countUserInRoom,
-										lastMessageTime : -1
-									};
-									arr.push(object);
-									cb();
-								}
+								});
 							});
-						});
-					}
-				});
-			}, function(err){
+						}
+					});
+				}, 
+				function(err){
 				callback(arr);
 				con.end();
 				return;
