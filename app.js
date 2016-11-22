@@ -23,9 +23,7 @@ app.use(connect.urlencoded());
 server.listen(process.env.PORT || 7777);
 //get the request
 app.get('/', function(req,res){
-	getUser(39, function(result){
-		res.json(result);
-	});
+	res.end('NODEJS COMPLETE');
 });
 
 app.post('/dang-ky', function(req, res){
