@@ -381,7 +381,8 @@ function themUser(user,callback){
 				else
 				{
 					con.query('INSERT INTO user SET ?', user, function(err,res)
-					{	
+					{
+						con.end();	
 						if (err) 
 						{
 							console.log("Loi truy cap");
@@ -393,7 +394,6 @@ function themUser(user,callback){
 							callback(true);
 							return;
 						}
-						con.end();
 					});
 				}
 			}
@@ -418,6 +418,7 @@ function dangNhapUser(email, password, callback)
 			return;
 		}
 		con.query('SELECT * FROM user WHERE email = ? and password = ?',[email,password], function(err, rows){
+			con.end();
 			if (err)
 			{
 				callback(false, -1, '');
@@ -433,7 +434,6 @@ function dangNhapUser(email, password, callback)
 				callback(false, -1, '', '');
 				return;
 			}
-			con.end();
 		});
 	});
 }
@@ -454,6 +454,7 @@ function timKiemUser(search,IDuser,callback)
 			return;
 		}
 		con.query('SELECT _ID,name,avatar,status FROM user WHERE _ID <> ? and (email = ? or name like ?)',[IDuser, search,'%'+search+'%'], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -577,7 +578,6 @@ function timKiemUser(search,IDuser,callback)
 				});
 			}, function(err){
 				callback(arrRoom, arrFriend, arrRequest, arrAccept, arrNone);
-				con.end();
 				});
 			});
 			});
@@ -601,7 +601,8 @@ function requestFriend(request,callback){
 			return;
 		}
 		con.query('INSERT INTO requestfriend SET ?', request, function(err,res)
-		{	
+		{
+			con.end();	
 			if (err) 
 			{
 				console.log("Loi truy cap");
@@ -613,7 +614,6 @@ function requestFriend(request,callback){
 				callback(true);
 			    return;
 			}
-			con.end();
 	    });
 	});	
 }
@@ -676,6 +676,7 @@ function testRelationship(IDuser, IDFriend, callback)
 						else
 						{
 							con.query('SELECT * FROM userfriend WHERE _IDFriend = ? and _IDuser = ?',[IDFriend, IDuser], function(err, rows){
+							con.end();
 							if (err)
 							{
 								throw err;
@@ -688,13 +689,11 @@ function testRelationship(IDuser, IDFriend, callback)
 								if (rows.length > 0)
 								{
 									callback(2);
-									con.end();
 									return;
 								}
 								else
 								{
 									callback(0);
-									con.end();
 									return;
 								}
 							}
@@ -781,6 +780,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 											_IDuser : item
 										};
 										con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
+										con.end();
 										if (err) 
 										{
 											console.log("Loi truy cap");
@@ -791,7 +791,6 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 										});
 									},function(err){
 										callback(true);
-										con.end();
 										return;
 									});
 								}
@@ -822,6 +821,7 @@ function listRequestFriend(IDuser,start,callback)
 			return;
 		}
 		con.query('SELECT us._ID,us.name, us.avatar FROM requestfriend rf, user us WHERE rf._IDuser = ? and rf._IDrequest = us._ID LIMIT '+ start+',10',[IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -829,7 +829,6 @@ function listRequestFriend(IDuser,start,callback)
 				return;
 			}
 			callback(rows);
-			con.end();
 		});
 	});
 }
@@ -850,7 +849,8 @@ function requestFriend(request,callback){
 			return;
 		}
 		con.query('INSERT INTO requestfriend SET ?', request, function(err,res)
-		{	
+		{
+			con.end();	
 			if (err) 
 			{
 				console.log("Loi truy cap");
@@ -862,7 +862,6 @@ function requestFriend(request,callback){
 				callback(true);
 			    return;
 			}
-			con.end();
 	    });
 	});	
 }
@@ -883,6 +882,7 @@ function joinRoom(IDuser, socket)
 			return;
 		}
 		con.query('SELECT * From roomdetail WHERE _IDuser = ?',[IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -891,7 +891,7 @@ function joinRoom(IDuser, socket)
 			}
 			else
 			{
-				con.end();
+
 				if (rows.length > 0)
 				{
 					for (var i=0 ; i<rows.length ; i++)
@@ -925,6 +925,7 @@ function getIdRoom(manguser,callback)
 		}
 		tachMangUserThanhChuoi(manguser, function(chuoi){
 			con.query('SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?',[manguser.length], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -932,7 +933,6 @@ function getIdRoom(manguser,callback)
 				return;
 			}
 			callback(rows[0]._IDRoom);
-			con.end();
 			});
 		});
 	});
@@ -968,6 +968,7 @@ function listFriendOnline(IDuser,start,callback)
 			return;
 		}
 		con.query('SELECT us._ID,us.name, us.avatar, us.status FROM userfriend uf, user us WHERE uf._IDuser = ? and uf._IDFriend = us._ID and us.status = 1 LIMIT '+ start+',10',[IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -1001,13 +1002,12 @@ function listFriendOnline(IDuser,start,callback)
 				});
 				}, function(err) {
 					callback(arr);
-					con.end();
+
 				});
 			}
 			else
 			{
 			callback(arr);
-			con.end();
 			}
 		});
 	});
@@ -1029,6 +1029,7 @@ function listFriend(IDuser,start,callback)
 			return;
 		}
 		con.query('SELECT us._ID,us.name, us.avatar, us.status FROM userfriend uf, user us WHERE uf._IDuser = ? and uf._IDFriend = us._ID LIMIT '+ start+',10',[IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -1061,13 +1062,13 @@ function listFriend(IDuser,start,callback)
 				});
 				}, function(err) {
 					callback(arr);
-					con.end();
+
 				});
 			}
 			else
 			{
 			callback(arr);
-			con.end();
+
 			}
 		});
 	});
@@ -1089,6 +1090,7 @@ function getUser(IDuser,callback)
 			return;
 		}
 		con.query('SELECT * FROM user WHERE _ID = ?',[IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -1096,7 +1098,7 @@ function getUser(IDuser,callback)
 				return;
 			}
 			callback(rows[0]);
-			con.end();
+
 		});
 	});
 }
@@ -1117,6 +1119,7 @@ function getNameUser(IDuser,callback)
 			return;
 		}
 		con.query('SELECT name FROM user WHERE _ID = ?',[IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -1124,7 +1127,7 @@ function getNameUser(IDuser,callback)
 				return;
 			}
 			callback(rows[0].name);
-			con.end();
+
 		});
 	});
 }
@@ -1145,17 +1148,17 @@ function updateNameUser(name, IDuser,callback)
 			return;
 		}
 		con.query('UPDATE user set name = ? WHERE _ID = ?',[ name , IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-				con.end();
+
 				return;
 			}
 			else
 			{
 				callback(true);
-				con.end();
 				return;
 			}
 		});
@@ -1178,17 +1181,17 @@ function updateGenderUser(gender, IDuser,callback)
 			return;
 		}
 		con.query('UPDATE user set gender = ? WHERE _ID = ?',[ gender , IDuser], function(err, rows){
+							con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-				con.end();
+
 				return;
 			}
 			else
 			{
 				callback(true);
-				con.end();
 				return;
 			}
 		});
@@ -1212,17 +1215,17 @@ function updatePasswordUser(password, IDuser,callback)
 			return;
 		}
 		con.query('UPDATE user set gender = ? WHERE _ID = ?',[ password , IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-				con.end();
+
 				return;
 			}
 			else
 			{
 				callback(true);
-				con.end();
 				return;
 			}
 
@@ -1246,17 +1249,17 @@ function updateBirthdayUser(birthday, IDuser,callback)
 			return;
 		}
 		con.query('UPDATE user set gender = ? WHERE _ID = ?',[ birthday , IDuser], function(err, rows){
+			con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-				con.end();
+
 				return;
 			}
 			else
 			{
 				callback(true);
-				con.end();
 				return;
 			}
 		});
@@ -1279,17 +1282,18 @@ function updateAvatarUser(avatar, IDuser,callback)
 			return;
 		}
 		con.query('UPDATE user set avatar = ? WHERE _ID = ?',[ avatar , IDuser], function(err, rows){
+							con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-				con.end();
+
 				return;
 			}
 			else
 			{
 				callback(true);
-				con.end();
+
 				return;
 			}
 		});
@@ -1312,6 +1316,7 @@ function inviteList(IDRoom, IDuser,start,callback)
 			return;
 		}
 		con.query('SELECT _ID, name, avatar FROM user WHERE _ID IN (SELECT _IDFriend FROM userfriend WHERE _IDuser = ? AND _IDFriend Not IN (SELECT _IDuser FROM roomdetail WHERE _IDRoom = ?)) LIMIT '+ start+',10',[IDuser,IDRoom], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1319,7 +1324,7 @@ function inviteList(IDRoom, IDuser,start,callback)
 				return;
 			}
 			callback(rows);
-			con.end();
+
 			return;
 		});
 	});
@@ -1341,6 +1346,7 @@ function countUserInRoom(IDRoom, callback)
 			return;
 		}
 		con.query('SELECT COUNT(*) as count FROM roomdetail WHERE _IDRoom = ?',[IDRoom], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1348,7 +1354,7 @@ function countUserInRoom(IDRoom, callback)
 				return;
 			}
 			callback(rows[0].count);
-			con.end();
+
 			return;
 		});
 	});
@@ -1370,6 +1376,7 @@ function themUserVaoRoom(manguser, IDRoom, callback)
 			    _IDuser : item
 			};
 			con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
+							con.end();
 			if (err) 
 			{
 				console.log("Loi truy cap");
@@ -1380,7 +1387,7 @@ function themUserVaoRoom(manguser, IDRoom, callback)
 			});
 		}, function(err){
 			callback(true);
-			con.end();
+
 			return;
 		});
 	});	
@@ -1402,6 +1409,7 @@ function getUserInRoom(IDRoom, callback)
 			return;
 		}
 		con.query('SELECT user._ID, user.name, user.avatar FROM roomdetail, user WHERE roomdetail._IDRoom = ? and roomdetail._IDuser = user._ID',[IDRoom], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1409,7 +1417,7 @@ function getUserInRoom(IDRoom, callback)
 				return;
 			}
 			callback(rows);
-			con.end();
+
 			return;
 		});
 	});
@@ -1431,6 +1439,7 @@ function getUserInRoomLoaiBoIDuser(IDRoom,IDuser ,callback)
 			return;
 		}
 		con.query('SELECT user._ID, user.name, user.avatar FROM roomdetail, user WHERE roomdetail._IDRoom = ? and roomdetail._IDuser <> ? and roomdetail._IDuser = user._ID',[IDRoom, IDuser], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1438,7 +1447,7 @@ function getUserInRoomLoaiBoIDuser(IDRoom,IDuser ,callback)
 				return;
 			}
 			callback(rows);
-			con.end();
+
 			return;
 		});
 	});
@@ -1460,6 +1469,7 @@ function getRoom(IDRoom,callback)
 			return;
 		}
 		con.query('SELECT * from room where _ID = ?',[IDRoom], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1467,7 +1477,7 @@ function getRoom(IDRoom,callback)
 				return;
 			}
 			callback(rows);
-			con.end();
+
 			return;
 		});
 	});
@@ -1508,6 +1518,7 @@ function taoRoom(manguser,nameGroup,IDuser, callback)
 						_IDuser : item
 					};
 					con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
+												con.end();
 					if (err) 
 					{
 						console.log("Loi truy cap insert vao roomdetail");
@@ -1518,7 +1529,7 @@ function taoRoom(manguser,nameGroup,IDuser, callback)
 					});
 					}, function(err){
 						callback(true, id);
-						con.end();
+
 						return;
 					});
 				}
@@ -1601,6 +1612,7 @@ function listAllRoom(IDuser,callback)
 			return;
 		}
 		con.query('SELECT * FROM roomdetail WHERE _IDuser = ?',[IDuser], function(err, rows){
+							con.end();
 			if (err)
 			{
 				throw err;
@@ -1679,7 +1691,7 @@ function listAllRoom(IDuser,callback)
 				}, 
 				function(err){
 				callback(arr);
-				con.end();
+
 				return;
 			});
 		});
@@ -1702,6 +1714,7 @@ function insertMessage(IDRoom ,IDuser, message, callback)
 				Message : message
 	    };
 		con.query('INSERT INTO message SET ?', messageObject, function(err,res){
+						con.end();
 		if (err) 
 		{
 			console.log("Loi truy cap");
@@ -1711,7 +1724,7 @@ function insertMessage(IDRoom ,IDuser, message, callback)
 		else
 	    {
 			callback(true, res.insertId);
-			con.end();
+
 			return;
 		}
 		});
@@ -1734,6 +1747,7 @@ function listMessageInRoom(IDRoom,start,callback)
 			return;
 		}
 		con.query('SELECT message.*, user.name, user.avatar FROM message, user where message._IDRoom = ? and user._ID = message._IDuser ORDER BY TIME DESC LIMIT '+ start+',10',[IDRoom], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1741,7 +1755,7 @@ function listMessageInRoom(IDRoom,start,callback)
 				return;
 			}
 			callback(rows);
-			con.end();
+
 			return;
 		});
 	});
@@ -1763,6 +1777,7 @@ function getLastMessageInRoom(IDRoom,callback)
 			return;
 		}
 		con.query('SELECT * from message where _IDRoom = ? ORDER BY TIME DESC LIMIT 0,1',[IDRoom], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1770,7 +1785,7 @@ function getLastMessageInRoom(IDRoom,callback)
 				return;
 			}
 			callback(rows[0]);
-			con.end();
+
 			return;
 		});
 	});
@@ -1792,6 +1807,7 @@ function getMessage(ID, callback)
 			return;
 		}
 		con.query('SELECT * from message where _ID = ?',[ID], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1799,7 +1815,7 @@ function getMessage(ID, callback)
 				return;
 			}
 			callback(rows[0]);
-			con.end();
+
 			return;
 		});
 	});
@@ -1899,17 +1915,18 @@ function updateStatusUser(IDuser,status,callback)
 			return;
 		}
 		con.query('UPDATE user set status = ? WHERE _ID = ?',[ status , IDuser], function(err, rows){
+							con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-				con.end();
+
 				return;
 			}
 			else
 			{
 				callback(true);
-				con.end();
+
 				return;
 			}
 		});
@@ -1932,11 +1949,12 @@ function isRoomHaveMessage(IDRoom,callback)
 			return;
 		}
 		con.query('SELECT * FROM message WHERE _IDRoom = ?',[IDRoom], function(err, rows){
+								con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-				con.end();
+
 				return;
 			}
 			else
@@ -1944,13 +1962,13 @@ function isRoomHaveMessage(IDRoom,callback)
 				if (rows.length > 0)
 				{
 					callback(true);
-					con.end();
+
 					return;
 				}
 				else
 				{
 					callback(false);
-					con.end();
+
 					return;
 				}
 			}
@@ -1991,6 +2009,7 @@ function getFriendOnline(IDuser, callback)
 			return;
 		}
 		con.query('select user.email from userfriend, user where userfriend._IDuser = ? and userfriend._IDFriend = user._ID and user.status = 1',[IDuser], function(err, rows){
+						con.end();
 			if (err)
 			{
 				throw err;
@@ -1998,7 +2017,7 @@ function getFriendOnline(IDuser, callback)
 				return;
 			}
 			callback(rows);
-			con.end();
+
 			return;
 		});
 	});
