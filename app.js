@@ -7,7 +7,7 @@ var mysql = require('mysql');
 var fs = require('fs');
 var async = require('async');
 var connect = require('connect');
-var db_host = 'mydbinstance.cmf4fnpbrpkm.us-west-2.rds.amazonaws.com';
+var db_host = 'dbsin.cuvbnym1aqch.ap-southeast-1.rds.amazonaws.com';
 var db_username = 'phungtruong';
 var db_password = 'phungpro';
 var db_name = 'usermanage';
@@ -323,9 +323,8 @@ socketio.on('connection',function(socket)
 			insertMessage(IDRoom, IDuser, message, function(result, id){
 				getMessage(id, function(msg){
 					var time = msg.Time;
-					socketio.to(IDRoom+'').emit('server-gui-message',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : 	name, avatar : avatar, time:time});
+					socketio.to(IDRoom+'').emit('server-gui-message',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
 				});
-	
 			});
 		});
 	});
