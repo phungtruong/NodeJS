@@ -7,7 +7,7 @@ var mysql = require('mysql');
 var fs = require('fs');
 var async = require('async');
 var connect = require('connect');
-var db_host = 'dbsin.cuvbnym1aqch.ap-southeast-1.rds.amazonaws.com';
+var db_host = 'dbchaua.cuvbnym1aqch.ap-southeast-1.rds.amazonaws.com';
 var db_username = 'phungtruong';
 var db_password = 'phungpro';
 var db_name = 'usermanage';
@@ -1691,7 +1691,6 @@ function listAllRoom(IDuser,callback)
 									cb();
 								}
 							});
-							
 						});
 					}
 				});
