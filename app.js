@@ -82,6 +82,14 @@ app.post('/dang-nhap', function(req, res){
 	});
 });
 
+app.post('/get-user-seen-in-room', function(req, res){
+	var IDuser = req.body.IDuser;
+	var IDRoom = req.body.IDRoom;
+	getAllUserSeenRoom(IDuser, IDRoom, function(rows){
+		res.json(rows);
+	});
+});
+
 app.post('/get-user', function(req, res){
 	var IDuser = req.body.IDuser;
 	getUser(IDuser, function(result){
@@ -240,6 +248,7 @@ app.post('/upload', function(req, res) {
 		    else
 				res.json({'response':"Error"});
 		});
+	
 }
 });
 });
@@ -320,12 +329,56 @@ socketio.on('connection',function(socket)
 			var name = mangdacat[2];
 			var avatar = mangdacat[3];
 			var message = mangdacat[4];
-			insertMessage(IDRoom, IDuser, message, function(result, id){
-				getMessage(id, function(msg){
-					var time = msg.Time;
-					socketio.to(IDRoom+'').emit('server-gui-message',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
+			updateNoneStatusRoom(IDRoom, function(result){
+				insertMessage(IDRoom, IDuser, message, function(result, id){
+					getMessage(id, function(msg){
+						var time = msg.Time;
+						socketio.to(IDRoom+'').emit('server-gui-message',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
+						socketio.to(IDRoom+'').emit('server-gui-message-in-room',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
+					});
 				});
 			});
+
+		});
+	});
+	
+	socket.on('client-gui-user-da-seen-room', function(content){
+		catChuoi(content,3, function(mangdacat){
+			var IDuser = mangdacat[0];
+			var IDRoom = mangdacat[1];
+			var name = mangdacat[2];
+			getLastMessageInRoom(IDRoom, function(msg){
+				if (IDuser != msg._IDuser)
+				{
+					updateUserStatusSeenRoom(IDuser, IDRoom, function(result){
+						socketio.to(IDRoom).emit('server-gui-user-seen-room', {IDuser : IDuser, name : name});
+					});
+				}					
+			});
+			
+		});
+	});
+	
+	socket.on('client-gui-user-da-seen-room-from-load', function(content){
+		catChuoi(content,3, function(mangdacat){
+			var IDuser = mangdacat[0];
+			var IDRoom = mangdacat[1];
+			var name = mangdacat[2];
+			getLastMessageInRoom(IDRoom, function(msg){
+				if (IDuser != msg._IDuser)
+				{
+					isUserSeenStatusRoom(IDuser, IDRoom, function(output){
+						if (!output)
+						{
+							updateUserStatusSeenRoom(IDuser, IDRoom, function(result){
+								socketio.to(IDRoom).emit('server-gui-user-seen-room', {IDuser : IDuser, name : name});
+							});
+						}
+					});
+					
+				}					
+			});
+			
 		});
 	});
 	
@@ -1755,7 +1808,6 @@ function listMessageInRoom(IDRoom,start,callback)
 				return;
 			}
 			callback(rows);
-
 			return;
 		});
 	});
@@ -2023,14 +2075,120 @@ function getFriendOnline(IDuser, callback)
 	});
 }
 
+function updateNoneStatusRoom(IDRoom, callback)
+{
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			return;
+		}
+		con.query('Update roomdetail set status_seen = 0 where _IDRoom = ?',[IDRoom], function(err, res){
+			con.end();
+			if (err)
+			{
+				callback(false);
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			callback(true);
+			return;
+		});
+	});
+}
 
+function updateUserStatusSeenRoom(IDuser,IDRoom, callback)
+{
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			return;
+		}
+		con.query('Update roomdetail set status_seen = 1 where _IDRoom = ? and _IDuser = ?',[IDRoom,IDuser], function(err, res){
+			con.end();
+			if (err)
+			{
+				callback(false);
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			callback(true);
+			return;
+		});
+	});
+}
 
+function getAllUserSeenRoom(IDuser, IDRoom, callback)
+{
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			return;
+		}
+		con.query('select user._ID, user.name from roomdetail,user where roomdetail.status_seen = 1 and roomdetail._IDRoom = ? and roomdetail._IDuser <> ? and roomdetail._IDuser = user._ID',[IDRoom,IDuser], function(err, rows){
+			con.end();
+			if (err)
+			{
+				callback(rows);
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			callback(rows);
+			return;
+		});
+	});
+}
 
-
-
-
-
-
-
-
-
+function isUserSeenStatusRoom(IDuser,IDRoom, callback)
+{
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			return;
+		}
+		con.query('select * from roomdetail where status_seen = 1 and _IDRoom = ? and _IDuser = ?',[IDRoom,IDuser], function(err, rows){
+			con.end();
+			if (rows.length > 0)
+			{
+				callback(true);
+				return;
+			}
+			else
+			{
+				callback(false);
+				return;
+			}
+		});
+	});
+}
