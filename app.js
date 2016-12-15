@@ -93,7 +93,7 @@ app.post('/get-user-seen-in-room', function(req, res){
 app.post('/get-user', function(req, res){
 	var IDuser = req.body.IDuser;
 	getUser(IDuser, function(result){
-		res.json(result);
+		res.end(JSON.stringify(result));
 	});
 });
 
@@ -123,6 +123,67 @@ app.post('/insert-friend', function(req, res){
 	});
 });
 
+app.post('/update-name', function(req, res){
+	var name = req.body.name;
+    var iduser = req.body.IDuser;
+	
+	updateNameUser(name, iduser, function(result){
+		var success = {
+			success : result
+		}
+		res.end(JSON.stringify(success));
+	});
+});
+
+app.post('/update-gender', function(req, res){
+	var gender = req.body.gender;
+    var iduser = req.body.IDuser;
+	
+	updateGenderUser(gender, iduser, function(result){
+		var success = {
+			success : result
+		}
+		res.end(JSON.stringify(success));
+	});
+});
+
+app.post('/update-password', function(req, res){
+	var oldpassword = req.body.oldpassword;
+	var newpassword = req.body.newpassword;
+    var iduser = req.body.IDuser;
+	
+	updatePasswordUser(oldpassword, newpassword, iduser, function(result){
+		var success = {
+			success : result
+		}
+		res.end(JSON.stringify(success));
+	});
+});
+
+app.post('/update-birthday', function(req, res){
+	var birthday = req.body.birthday;
+    var iduser = req.body.IDuser;
+	
+	updateBirthdayUser(birthday, iduser, function(result){
+		var success = {
+			success : result
+		}
+		res.end(JSON.stringify(success));
+	});
+});
+
+app.post('/update-name', function(req, res){
+	var name = req.body.name;
+    var iduser = req.body.IDuser;
+	
+	updateNameUser(name, iduser, function(result){
+		var success = {
+			success : result
+		}
+		res.end(JSON.stringify(success));
+	});
+});
+
 app.post('/add-friend-to-room', function(req, res){
 	var IDRoom = req.body.IDRoom;
 	var JsonMangUser = req.body.JsonMangUser;
@@ -135,6 +196,22 @@ app.post('/add-friend-to-room', function(req, res){
 			success : result,
 			type : type,
 			IDRoom : RoomID
+		}
+		res.end(JSON.stringify(success));
+	});
+	});
+});
+
+app.post('/create-new-room-group-chat', function(req, res){
+	var JsonMangUser = req.body.JsonMangUser;
+	var nameGroup = req.body.nameGroup;
+	var IDuser = req.body.IDuser;
+	parseJSON(JsonMangUser, function(array){
+		var manguser = array;
+		taoRoom(manguser, nameGroup, IDuser, function(result, id){
+		var success = {
+			success : result,
+			IDRoom : id
 		}
 		res.end(JSON.stringify(success));
 	});
@@ -194,6 +271,15 @@ app.post('/invite-list', function(req, res){
 	var start = req.body.start;
 	var idroom = req.body.IDRoom;
 	inviteList(idroom ,iduser, start, function(result){
+		res.json(result);
+	});
+});
+
+app.post('/invite-list-to-create-new-room', function(req, res){
+    var iduser = req.body.IDuser;
+	var start = req.body.start;
+	var idroom = req.body.IDRoom;
+	inviteListToCreateNewRoom(idroom ,iduser, start, function(result){
 		res.json(result);
 	});
 });
@@ -833,7 +919,6 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 											_IDuser : item
 										};
 										con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
-										con.end();
 										if (err) 
 										{
 											console.log("Loi truy cap");
@@ -844,6 +929,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 										});
 									},function(err){
 										callback(true);
+										con.end();
 										return;
 									});
 								}
@@ -1252,7 +1338,7 @@ function updateGenderUser(gender, IDuser,callback)
 }
 
 
-function updatePasswordUser(password, IDuser,callback)
+function updatePasswordUser(oldpassword, newpassword, IDuser,callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -1267,22 +1353,33 @@ function updatePasswordUser(password, IDuser,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('UPDATE user set gender = ? WHERE _ID = ?',[ password , IDuser], function(err, rows){
-			con.end();
-			if (err)
+		con.query('select * from user where _ID = ? and password = ?',[ IDuser, oldpassword ], function(err, rows){
+			if (rows.length > 0)
 			{
-				console.log("Lenh update bi loi");
-				callback(false);
-
-				return;
+				con.query('UPDATE user set password = ? WHERE _ID = ?',[ newpassword , IDuser ], function(err, rows){
+					con.end();
+					if (err)
+					{
+						console.log("Lenh update bi loi");
+						callback(false);
+						return;
+					}
+					else
+					{
+						callback(true);
+						return;
+					}
+					});
 			}
 			else
 			{
-				callback(true);
+				con.end();
+				callback(false);
 				return;
 			}
 
 		});
+		
 	})
 }
 
@@ -1301,13 +1398,12 @@ function updateBirthdayUser(birthday, IDuser,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('UPDATE user set gender = ? WHERE _ID = ?',[ birthday , IDuser], function(err, rows){
+		con.query('UPDATE user set date_of_birth = ? WHERE _ID = ?',[ birthday , IDuser], function(err, rows){
 			con.end();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
 				callback(false);
-
 				return;
 			}
 			else
@@ -1383,6 +1479,36 @@ function inviteList(IDRoom, IDuser,start,callback)
 	});
 }
 
+function inviteListToCreateNewRoom(IDRoom, IDuser,start,callback)
+{
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			return;
+		}
+		con.query('SELECT _ID, name, avatar FROM user WHERE _ID IN (SELECT _IDFriend FROM userfriend WHERE _IDuser = ?) LIMIT '+ start+',10',[IDuser,IDRoom], function(err, rows){
+						con.end();
+			if (err)
+			{
+				throw err;
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			callback(rows);
+
+			return;
+		});
+	});
+}
+
 function countUserInRoom(IDRoom, callback)
 {
 	var con = mysql.createConnection({
@@ -1429,7 +1555,7 @@ function themUserVaoRoom(manguser, IDRoom, callback)
 			    _IDuser : item
 			};
 			con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
-							con.end();
+							
 			if (err) 
 			{
 				console.log("Loi truy cap");
@@ -1440,7 +1566,7 @@ function themUserVaoRoom(manguser, IDRoom, callback)
 			});
 		}, function(err){
 			callback(true);
-
+			con.end();
 			return;
 		});
 	});	
@@ -1522,7 +1648,7 @@ function getRoom(IDRoom,callback)
 			return;
 		}
 		con.query('SELECT * from room where _ID = ?',[IDRoom], function(err, rows){
-						con.end();
+			con.end();
 			if (err)
 			{
 				throw err;
@@ -1530,13 +1656,12 @@ function getRoom(IDRoom,callback)
 				return;
 			}
 			callback(rows);
-
 			return;
 		});
 	});
 }
 
-function taoRoom(manguser,nameGroup,IDuser, callback)
+function taoRoom(manguser, nameGroup, IDuser, callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -1571,7 +1696,6 @@ function taoRoom(manguser,nameGroup,IDuser, callback)
 						_IDuser : item
 					};
 					con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
-												con.end();
 					if (err) 
 					{
 						console.log("Loi truy cap insert vao roomdetail");
@@ -1581,13 +1705,14 @@ function taoRoom(manguser,nameGroup,IDuser, callback)
 					cb();
 					});
 					}, function(err){
+						con.end();
 						callback(true, id);
-
 						return;
 					});
 				}
 				else
 				{
+					con.end();
 					callback(false, -1);
 					return;
 				}
@@ -1618,7 +1743,7 @@ function addFriendToRoom(manguser, IDRoom,nameGroup, IDuser, callback)
 			//tao room moi
 			getUserInRoom(IDRoom, function(rows){
 				pushUserInArray(manguser, rows, function(arrayUser){
-					taoRoom(arrayUser,nameGroup,IDuser, function(result, insertID){
+					taoRoom(arrayUser, nameGroup,IDuser, function(result, insertID){
 					callback(result, 1, insertID);
 				});
 				});
@@ -1744,7 +1869,6 @@ function listAllRoom(IDuser,callback)
 				}, 
 				function(err){
 				callback(arr);
-
 				return;
 			});
 		});
