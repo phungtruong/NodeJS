@@ -58,9 +58,11 @@ app.post('/dang-ky', function(req, res){
 			avatar       : null,
 			date_of_birth: req.body.birthday
 	}
-	themUser(taikhoan, function(result){
+	themUser(taikhoan, function(result, email, password){
 		var success = {
-			success : result
+			success : result,
+			email : email,
+			password : password
 		}
 		res.end(JSON.stringify(success));
 	});
@@ -487,6 +489,7 @@ function catChuoi(chuoi,len, callback){
 	var mangdacat = chuoi.split('#',len);
 	callback(mangdacat);
 }
+
 function themUser(user,callback){
 	var con = mysql.createConnection({
 	host: db_host,
@@ -499,7 +502,7 @@ function themUser(user,callback){
 		if(err)
 		{
 			console.log('Error connecting to Db');
-			callback(false);
+			callback(false, '', '');
 			return;
 		}
 		con.query('SELECT * FROM user Where email = ?',[user.email], function(err,rows)
@@ -507,14 +510,14 @@ function themUser(user,callback){
 			if (err)
 			{
 				console.log("Loi kiem tra user");
-				callback(false);
+				callback(false, '', '');
 				return;
 			}
 			else
 			{
 				if (rows.length > 0)
 				{
-					callback(false);
+					callback(false, rows[0].email, rows[0].password);
 					return;
 				}
 				else
@@ -525,12 +528,12 @@ function themUser(user,callback){
 						if (err) 
 						{
 							console.log("Loi truy cap");
-							callback(false);
+							callback(false, '' ,'');
 							return;
 						}
 						else
 						{
-							callback(true);
+							callback(true, '', '');
 							return;
 						}
 					});
