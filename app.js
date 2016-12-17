@@ -264,7 +264,6 @@ app.post('/list-message-in-room', function(req, res){
     var IDRoom = req.body.IDRoom;
 	var start = req.body.start;
 	listMessageInRoom(IDRoom, start, function(result){
-		res.header("Content-Type", "application/json; charset=utf-8");
 		res.json(result);
 	});
 });
@@ -1918,7 +1917,8 @@ function listMessageInRoom(IDRoom,start,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,
+	charset: "utf8_general_ci"
 	});
 	con.connect(function(err)
 	{
