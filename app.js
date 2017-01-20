@@ -7,10 +7,11 @@ var mysql = require('mysql');
 var fs = require('fs');
 var async = require('async');
 var connect = require('connect');
-var db_host = 'dbchaua.cuvbnym1aqch.ap-southeast-1.rds.amazonaws.com';
-var db_username = 'phungtruong';
-var db_password = 'phungpro';
-var db_name = 'usermanage';
+var db_host = 'us-cdbr-iron-east-04.cleardb.net';
+var db_username = 'bb9ed0c0bb70ea';
+var db_password = '28087f2a';
+var db_name = 'heroku_7d627ea66222c76';
+var db_timeout = 10000000;
 app.use(express.static(__dirname + '/public'));
 app.use(connect.cookieParser());
 app.use(connect.logger('dev'));
@@ -31,7 +32,7 @@ app.get('/test', function(req,res){
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -495,7 +496,7 @@ function themUser(user,callback){
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -549,7 +550,7 @@ function dangNhapUser(email, password, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -586,7 +587,7 @@ function timKiemUser(search,IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -732,7 +733,7 @@ function requestFriend(request,callback){
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -771,7 +772,7 @@ function testRelationship(IDuser, IDFriend, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -854,7 +855,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -953,7 +954,7 @@ function listRequestFriend(IDuser,start,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -980,7 +981,7 @@ function requestFriend(request,callback){
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1014,7 +1015,7 @@ function joinRoom(IDuser, socket)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1056,7 +1057,7 @@ function getIdRoom(manguser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1100,7 +1101,7 @@ function listFriendOnline(IDuser,start,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1161,7 +1162,7 @@ function listFriend(IDuser,start,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1222,7 +1223,7 @@ function getUser(IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1251,7 +1252,7 @@ function getNameUser(IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1280,7 +1281,7 @@ function updateNameUser(name, IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1313,7 +1314,7 @@ function updateGenderUser(gender, IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1347,7 +1348,7 @@ function updatePasswordUser(oldpassword, newpassword, IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1392,7 +1393,7 @@ function updateBirthdayUser(birthday, IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1424,7 +1425,7 @@ function updateAvatarUser(avatar, IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1458,7 +1459,7 @@ function inviteList(IDRoom, IDuser,start,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1488,7 +1489,7 @@ function inviteListToCreateNewRoom(IDRoom, IDuser,start,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1518,7 +1519,7 @@ function countUserInRoom(IDRoom, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1548,7 +1549,7 @@ function themUserVaoRoom(manguser, IDRoom, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1581,7 +1582,7 @@ function getUserInRoom(IDRoom, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1611,7 +1612,7 @@ function getUserInRoomLoaiBoIDuser(IDRoom,IDuser ,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1641,7 +1642,7 @@ function getRoom(IDRoom,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1670,7 +1671,7 @@ function taoRoom(manguser, nameGroup, IDuser, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1783,7 +1784,7 @@ function listAllRoom(IDuser,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1884,7 +1885,7 @@ function insertMessage(IDRoom ,IDuser, message, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1917,8 +1918,7 @@ function listMessageInRoom(IDRoom,start,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name,
-	charset: "utf8_general_ci"
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1947,7 +1947,7 @@ function getLastMessageInRoom(IDRoom,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -1977,7 +1977,7 @@ function getMessage(ID, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -2085,7 +2085,7 @@ function updateStatusUser(IDuser,status,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -2119,7 +2119,7 @@ function isRoomHaveMessage(IDRoom,callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -2179,7 +2179,7 @@ function getFriendOnline(IDuser, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -2209,7 +2209,7 @@ function updateNoneStatusRoom(IDRoom, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -2238,7 +2238,7 @@ function updateUserStatusSeenRoom(IDuser,IDRoom, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -2267,7 +2267,7 @@ function getAllUserSeenRoom(IDuser, IDRoom, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
@@ -2296,7 +2296,7 @@ function isUserSeenStatusRoom(IDuser,IDRoom, callback)
 	host: db_host,
 	user: db_username,
 	password: db_password,
-	database: db_name
+	database: db_name,connectTimeout: db_timeout
 	});
 	con.connect(function(err)
 	{
