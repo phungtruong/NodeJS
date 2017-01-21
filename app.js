@@ -7,11 +7,19 @@ var mysql = require('mysql');
 var fs = require('fs');
 var async = require('async');
 var connect = require('connect');
+
 var db_host = 'us-cdbr-iron-east-04.cleardb.net';
 var db_username = 'bb9ed0c0bb70ea';
 var db_password = '28087f2a';
 var db_name = 'heroku_7d627ea66222c76';
 var db_timeout = 10000000;
+/*
+var db_host = 'localhost';
+var db_username = 'root';
+var db_password = '';
+var db_name = 'usermanage';
+var db_timeout = 10000000;
+*/
 app.use(express.static(__dirname + '/public'));
 app.use(connect.cookieParser());
 app.use(connect.logger('dev'));
@@ -28,25 +36,10 @@ app.get('/', function(req,res){
 });
 
 app.get('/test', function(req,res){
-	var con = mysql.createConnection({
-	host: db_host,
-	user: db_username,
-	password: db_password,
-	database: db_name,connectTimeout: db_timeout
+	var IDuser = 39;
+	getUser(IDuser, function(result){
+		res.end(JSON.stringify(result));
 	});
-	con.connect(function(err)
-	{
-		if (err)
-		{
-			res.end('connection fail');
-			con.end();
-		}
-		else
-		{
-			res.end('connection oke');
-			con.end();
-		}
-	});	
 });
 
 app.post('/dang-ky', function(req, res){
@@ -484,21 +477,19 @@ socketio.on('connection',function(socket)
 	});
 });
 
-
-
 function catChuoi(chuoi,len, callback){
 	var mangdacat = chuoi.split('#',len);
 	callback(mangdacat);
 }
 
 function themUser(user,callback){
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
@@ -506,7 +497,7 @@ function themUser(user,callback){
 			callback(false, '', '');
 			return;
 		}
-		con.query('SELECT * FROM user Where email = ?',[user.email], function(err,rows)
+		connection.query('SELECT * FROM user Where email = ?',[user.email], function(err,rows)
 		{
 			if (err)
 			{
@@ -523,9 +514,9 @@ function themUser(user,callback){
 				}
 				else
 				{
-					con.query('INSERT INTO user SET ?', user, function(err,res)
+					connection.query('INSERT INTO user SET ?', user, function(err,res)
 					{
-						con.end();	
+						connection.release();	
 						if (err) 
 						{
 							console.log("Loi truy cap");
@@ -546,13 +537,13 @@ function themUser(user,callback){
 
 function dangNhapUser(email, password, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
@@ -560,8 +551,8 @@ function dangNhapUser(email, password, callback)
 			callback(false, -1, '');
 			return;
 		}
-		con.query('SELECT * FROM user WHERE email = ? and password = ?',[email,password], function(err, rows){
-			con.end();
+		connection.query('SELECT * FROM user WHERE email = ? and password = ?',[email,password], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				callback(false, -1, '');
@@ -583,21 +574,21 @@ function dangNhapUser(email, password, callback)
 
 function timKiemUser(search,IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT _ID,name,avatar,status FROM user WHERE _ID <> ? and (email = ? or name like ?)',[IDuser, search,'%'+search+'%'], function(err, rows){
-			con.end();
+		connection.query('SELECT _ID,name,avatar,status FROM user WHERE _ID <> ? and (email = ? or name like ?)',[IDuser, search,'%'+search+'%'], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -729,13 +720,13 @@ function timKiemUser(search,IDuser,callback)
 }
 
 function requestFriend(request,callback){
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
@@ -743,9 +734,9 @@ function requestFriend(request,callback){
 			callback(false);
 			return;
 		}
-		con.query('INSERT INTO requestfriend SET ?', request, function(err,res)
+		connection.query('INSERT INTO requestfriend SET ?', request, function(err,res)
 		{
-			con.end();	
+			connection.release();	
 			if (err) 
 			{
 				console.log("Loi truy cap");
@@ -768,13 +759,13 @@ function testRelationship(IDuser, IDFriend, callback)
 	// 1 : accept
 	// 2 : friend
 	// 3 : requested friend
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
@@ -782,7 +773,7 @@ function testRelationship(IDuser, IDFriend, callback)
 			callback(-1);
 			return;
 		}
-		con.query('SELECT * FROM requestfriend WHERE _IDrequest = ? and _IDuser = ?',[IDFriend, IDuser], function(err, rows){
+		connection.query('SELECT * FROM requestfriend WHERE _IDrequest = ? and _IDuser = ?',[IDFriend, IDuser], function(err, rows){
 			if (err)
 			{
 				throw err;
@@ -795,12 +786,12 @@ function testRelationship(IDuser, IDFriend, callback)
 				if (rows.length > 0)
 				{
 					callback(1);
-					con.end();
+					connection.release();
 					return;
 				}
 				else
 				{
-					con.query('SELECT * FROM requestfriend WHERE _IDrequest = ? and _IDuser = ?',[IDuser, IDFriend], function(err, rows){
+					connection.query('SELECT * FROM requestfriend WHERE _IDrequest = ? and _IDuser = ?',[IDuser, IDFriend], function(err, rows){
 					if (err)
 					{
 						throw err;
@@ -813,13 +804,13 @@ function testRelationship(IDuser, IDFriend, callback)
 						if (rows.length > 0)
 						{
 							callback(3);
-							con.end();
+							connection.release();
 							return;
 						}
 						else
 						{
-							con.query('SELECT * FROM userfriend WHERE _IDFriend = ? and _IDuser = ?',[IDFriend, IDuser], function(err, rows){
-							con.end();
+							connection.query('SELECT * FROM userfriend WHERE _IDFriend = ? and _IDuser = ?',[IDFriend, IDuser], function(err, rows){
+							connection.release();
 							if (err)
 							{
 								throw err;
@@ -851,13 +842,13 @@ function testRelationship(IDuser, IDFriend, callback)
 }
 
 function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
@@ -869,7 +860,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 			_IDuser : IDuser,
 			_IDFriend : IDFriend
 		};
-		con.query('INSERT INTO userfriend SET ?',object1, function(err,res)
+		connection.query('INSERT INTO userfriend SET ?',object1, function(err,res)
 		{	
 			if (err) 
 			{
@@ -883,7 +874,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 					_IDuser   : IDFriend,
 					_IDFriend : IDuser
 				};
-				con.query('INSERT INTO userfriend SET ?', object2, function(err,res){
+				connection.query('INSERT INTO userfriend SET ?', object2, function(err,res){
 					if (err) 
 					{
 						console.log("Loi truy cap");
@@ -892,7 +883,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 					}
 					else
 					{
-						con.query('DELETE FROM requestfriend WHERE _IDuser = ? and _IDrequest', [IDuser, IDFriend], function(err,res){
+						connection.query('DELETE FROM requestfriend WHERE _IDuser = ? and _IDrequest', [IDuser, IDFriend], function(err,res){
 						if (err) 
 						{
 							console.log("Loi truy cap");
@@ -906,7 +897,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 								name : name +'&'+ nameFriend,
 								IsEmpty : 1
 							};
-							con.query('INSERT INTO room SET ?', room, function(err,res){
+							connection.query('INSERT INTO room SET ?', room, function(err,res){
 								if (err) 
 								{
 									console.log("Loi truy cap");
@@ -922,7 +913,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 											_IDRoom : id,
 											_IDuser : item
 										};
-										con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
+										connection.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
 										if (err) 
 										{
 											console.log("Loi truy cap");
@@ -933,7 +924,7 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 										});
 									},function(err){
 										callback(true);
-										con.end();
+										connection.release();
 										return;
 									});
 								}
@@ -950,21 +941,21 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 
 function listRequestFriend(IDuser,start,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT us._ID,us.name, us.avatar FROM requestfriend rf, user us WHERE rf._IDuser = ? and rf._IDrequest = us._ID LIMIT '+ start+',10',[IDuser], function(err, rows){
-			con.end();
+		connection.query('SELECT us._ID,us.name, us.avatar FROM requestfriend rf, user us WHERE rf._IDuser = ? and rf._IDrequest = us._ID LIMIT '+ start+',10',[IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -977,13 +968,13 @@ function listRequestFriend(IDuser,start,callback)
 }
 
 function requestFriend(request,callback){
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
@@ -991,9 +982,9 @@ function requestFriend(request,callback){
 			callback(false);
 			return;
 		}
-		con.query('INSERT INTO requestfriend SET ?', request, function(err,res)
+		connection.query('INSERT INTO requestfriend SET ?', request, function(err,res)
 		{
-			con.end();	
+			connection.release();	
 			if (err) 
 			{
 				console.log("Loi truy cap");
@@ -1011,21 +1002,21 @@ function requestFriend(request,callback){
 
 function joinRoom(IDuser, socket)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT * From roomdetail WHERE _IDuser = ?',[IDuser], function(err, rows){
-			con.end();
+		connection.query('SELECT * From roomdetail WHERE _IDuser = ?',[IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -1053,13 +1044,13 @@ function joinRoom(IDuser, socket)
 
 function getIdRoom(manguser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
@@ -1067,8 +1058,8 @@ function getIdRoom(manguser,callback)
 			return;
 		}
 		tachMangUserThanhChuoi(manguser, function(chuoi){
-			con.query('SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?',[manguser.length], function(err, rows){
-			con.end();
+			connection.query('SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?',[manguser.length], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -1097,21 +1088,21 @@ function tachMangUserThanhChuoi(manguser, callback)
 
 function listFriendOnline(IDuser,start,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT us._ID,us.name, us.avatar, us.status FROM userfriend uf, user us WHERE uf._IDuser = ? and uf._IDFriend = us._ID and us.status = 1 LIMIT '+ start+',10',[IDuser], function(err, rows){
-			con.end();
+		connection.query('SELECT us._ID,us.name, us.avatar, us.status FROM userfriend uf, user us WHERE uf._IDuser = ? and uf._IDFriend = us._ID and us.status = 1 LIMIT '+ start+',10',[IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -1158,21 +1149,21 @@ function listFriendOnline(IDuser,start,callback)
 
 function listFriend(IDuser,start,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT us._ID,us.name, us.avatar, us.status FROM userfriend uf, user us WHERE uf._IDuser = ? and uf._IDFriend = us._ID LIMIT '+ start+',10',[IDuser], function(err, rows){
-			con.end();
+		connection.query('SELECT us._ID,us.name, us.avatar, us.status FROM userfriend uf, user us WHERE uf._IDuser = ? and uf._IDFriend = us._ID LIMIT '+ start+',10',[IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -1219,50 +1210,43 @@ function listFriend(IDuser,start,callback)
 
 function getUser(IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
-	{
+	con.getConnection(function(err, connection) {
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT * FROM user WHERE _ID = ?',[IDuser], function(err, rows){
-			con.end();
-			if (err)
-			{
-				throw err;
-				console.log("Loi cau lenh truy van");
-				return;
-			}
+		connection.query('SELECT * FROM user WHERE _ID = ?',[IDuser], function(err, rows){
+    		connection.release();
+    		if (err) throw err;
 			callback(rows[0]);
-
-		});
+  		});
 	});
 }
 
 function getNameUser(IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT name FROM user WHERE _ID = ?',[IDuser], function(err, rows){
-			con.end();
+		connection.query('SELECT name FROM user WHERE _ID = ?',[IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -1277,21 +1261,21 @@ function getNameUser(IDuser,callback)
 
 function updateNameUser(name, IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('UPDATE user set name = ? WHERE _ID = ?',[ name , IDuser], function(err, rows){
-			con.end();
+		connection.query('UPDATE user set name = ? WHERE _ID = ?',[ name , IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
@@ -1310,21 +1294,21 @@ function updateNameUser(name, IDuser,callback)
 
 function updateGenderUser(gender, IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('UPDATE user set gender = ? WHERE _ID = ?',[ gender , IDuser], function(err, rows){
-							con.end();
+		connection.query('UPDATE user set gender = ? WHERE _ID = ?',[ gender , IDuser], function(err, rows){
+							connection.release();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
@@ -1344,24 +1328,24 @@ function updateGenderUser(gender, IDuser,callback)
 
 function updatePasswordUser(oldpassword, newpassword, IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('select * from user where _ID = ? and password = ?',[ IDuser, oldpassword ], function(err, rows){
+		connection.query('select * from user where _ID = ? and password = ?',[ IDuser, oldpassword ], function(err, rows){
 			if (rows.length > 0)
 			{
-				con.query('UPDATE user set password = ? WHERE _ID = ?',[ newpassword , IDuser ], function(err, rows){
-					con.end();
+				connection.query('UPDATE user set password = ? WHERE _ID = ?',[ newpassword , IDuser ], function(err, rows){
+					connection.release();
 					if (err)
 					{
 						console.log("Lenh update bi loi");
@@ -1377,7 +1361,7 @@ function updatePasswordUser(oldpassword, newpassword, IDuser,callback)
 			}
 			else
 			{
-				con.end();
+				connection.release();
 				callback(false);
 				return;
 			}
@@ -1389,21 +1373,21 @@ function updatePasswordUser(oldpassword, newpassword, IDuser,callback)
 
 function updateBirthdayUser(birthday, IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('UPDATE user set date_of_birth = ? WHERE _ID = ?',[ birthday , IDuser], function(err, rows){
-			con.end();
+		connection.query('UPDATE user set date_of_birth = ? WHERE _ID = ?',[ birthday , IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
@@ -1421,21 +1405,21 @@ function updateBirthdayUser(birthday, IDuser,callback)
 
 function updateAvatarUser(avatar, IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('UPDATE user set avatar = ? WHERE _ID = ?',[ avatar , IDuser], function(err, rows){
-							con.end();
+		connection.query('UPDATE user set avatar = ? WHERE _ID = ?',[ avatar , IDuser], function(err, rows){
+							connection.release();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
@@ -1455,21 +1439,21 @@ function updateAvatarUser(avatar, IDuser,callback)
 
 function inviteList(IDRoom, IDuser,start,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT _ID, name, avatar FROM user WHERE _ID IN (SELECT _IDFriend FROM userfriend WHERE _IDuser = ? AND _IDFriend Not IN (SELECT _IDuser FROM roomdetail WHERE _IDRoom = ?)) LIMIT '+ start+',10',[IDuser,IDRoom], function(err, rows){
-						con.end();
+		connection.query('SELECT _ID, name, avatar FROM user WHERE _ID IN (SELECT _IDFriend FROM userfriend WHERE _IDuser = ? AND _IDFriend Not IN (SELECT _IDuser FROM roomdetail WHERE _IDRoom = ?)) LIMIT '+ start+',10',[IDuser,IDRoom], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -1485,21 +1469,21 @@ function inviteList(IDRoom, IDuser,start,callback)
 
 function inviteListToCreateNewRoom(IDRoom, IDuser,start,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT _ID, name, avatar FROM user WHERE _ID IN (SELECT _IDFriend FROM userfriend WHERE _IDuser = ?) LIMIT '+ start+',10',[IDuser,IDRoom], function(err, rows){
-						con.end();
+		connection.query('SELECT _ID, name, avatar FROM user WHERE _ID IN (SELECT _IDFriend FROM userfriend WHERE _IDuser = ?) LIMIT '+ start+',10',[IDuser,IDRoom], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -1515,21 +1499,21 @@ function inviteListToCreateNewRoom(IDRoom, IDuser,start,callback)
 
 function countUserInRoom(IDRoom, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT COUNT(*) as count FROM roomdetail WHERE _IDRoom = ?',[IDRoom], function(err, rows){
-						con.end();
+		connection.query('SELECT COUNT(*) as count FROM roomdetail WHERE _IDRoom = ?',[IDRoom], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -1545,20 +1529,20 @@ function countUserInRoom(IDRoom, callback)
 
 function themUserVaoRoom(manguser, IDRoom, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		async.each(manguser, function(item,cb){
 			var roomdetail = {
 				_IDRoom : IDRoom,
 			    _IDuser : item
 			};
-			con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
+			connection.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
 							
 			if (err) 
 			{
@@ -1570,7 +1554,7 @@ function themUserVaoRoom(manguser, IDRoom, callback)
 			});
 		}, function(err){
 			callback(true);
-			con.end();
+			connection.release();
 			return;
 		});
 	});	
@@ -1578,21 +1562,21 @@ function themUserVaoRoom(manguser, IDRoom, callback)
 
 function getUserInRoom(IDRoom, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT user._ID, user.name, user.avatar FROM roomdetail, user WHERE roomdetail._IDRoom = ? and roomdetail._IDuser = user._ID',[IDRoom], function(err, rows){
-						con.end();
+		connection.query('SELECT user._ID, user.name, user.avatar FROM roomdetail, user WHERE roomdetail._IDRoom = ? and roomdetail._IDuser = user._ID',[IDRoom], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -1608,21 +1592,21 @@ function getUserInRoom(IDRoom, callback)
 
 function getUserInRoomLoaiBoIDuser(IDRoom,IDuser ,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT user._ID, user.name, user.avatar FROM roomdetail, user WHERE roomdetail._IDRoom = ? and roomdetail._IDuser <> ? and roomdetail._IDuser = user._ID',[IDRoom, IDuser], function(err, rows){
-						con.end();
+		connection.query('SELECT user._ID, user.name, user.avatar FROM roomdetail, user WHERE roomdetail._IDRoom = ? and roomdetail._IDuser <> ? and roomdetail._IDuser = user._ID',[IDRoom, IDuser], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -1638,21 +1622,21 @@ function getUserInRoomLoaiBoIDuser(IDRoom,IDuser ,callback)
 
 function getRoom(IDRoom,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT * from room where _ID = ?',[IDRoom], function(err, rows){
-			con.end();
+		connection.query('SELECT * from room where _ID = ?',[IDRoom], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				throw err;
@@ -1667,20 +1651,20 @@ function getRoom(IDRoom,callback)
 
 function taoRoom(manguser, nameGroup, IDuser, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		var room = {
 				_ID  : 0,
 			    name : nameGroup,
 				IsEmpty : 1
 	    };
-		con.query('INSERT INTO room SET ?', room, function(err,res){
+		connection.query('INSERT INTO room SET ?', room, function(err,res){
 		if (err) 
 		{
 				console.log("Loi truy cap");
@@ -1699,7 +1683,7 @@ function taoRoom(manguser, nameGroup, IDuser, callback)
 						_IDRoom : id,
 						_IDuser : item
 					};
-					con.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
+					connection.query('INSERT INTO roomdetail SET ?', roomdetail, function(err,res){
 					if (err) 
 					{
 						console.log("Loi truy cap insert vao roomdetail");
@@ -1709,14 +1693,14 @@ function taoRoom(manguser, nameGroup, IDuser, callback)
 					cb();
 					});
 					}, function(err){
-						con.end();
+						connection.release();
 						callback(true, id);
 						return;
 					});
 				}
 				else
 				{
-					con.end();
+					connection.release();
 					callback(false, -1);
 					return;
 				}
@@ -1780,21 +1764,21 @@ function listAllRoomPage(array, start, callback)
 
 function listAllRoom(IDuser,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT * FROM roomdetail WHERE _IDuser = ?',[IDuser], function(err, rows){
-							con.end();
+		connection.query('SELECT * FROM roomdetail WHERE _IDuser = ?',[IDuser], function(err, rows){
+							connection.release();
 			if (err)
 			{
 				throw err;
@@ -1881,21 +1865,21 @@ function listAllRoom(IDuser,callback)
 
 function insertMessage(IDRoom ,IDuser, message, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		var messageObject = {
 				_IDRoom  : IDRoom,
 			    _IDuser : IDuser,
 				Message : message
 	    };
-		con.query('INSERT INTO message SET ?', messageObject, function(err,res){
-						con.end();
+		connection.query('INSERT INTO message SET ?', messageObject, function(err,res){
+						connection.release();
 		if (err) 
 		{
 			console.log("Loi truy cap");
@@ -1914,21 +1898,21 @@ function insertMessage(IDRoom ,IDuser, message, callback)
 
 function listMessageInRoom(IDRoom,start,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT message.*, user.name, user.avatar FROM message, user where message._IDRoom = ? and user._ID = message._IDuser ORDER BY TIME DESC LIMIT '+ start+',10',[IDRoom], function(err, rows){
-						con.end();
+		connection.query('SELECT message.*, user.name, user.avatar FROM message, user where message._IDRoom = ? and user._ID = message._IDuser ORDER BY TIME DESC LIMIT '+ start+',10',[IDRoom], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -1943,21 +1927,21 @@ function listMessageInRoom(IDRoom,start,callback)
 
 function getLastMessageInRoom(IDRoom,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT * from message where _IDRoom = ? ORDER BY TIME DESC LIMIT 0,1',[IDRoom], function(err, rows){
-						con.end();
+		connection.query('SELECT * from message where _IDRoom = ? ORDER BY TIME DESC LIMIT 0,1',[IDRoom], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -1973,21 +1957,21 @@ function getLastMessageInRoom(IDRoom,callback)
 
 function getMessage(ID, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT * from message where _ID = ?',[ID], function(err, rows){
-						con.end();
+		connection.query('SELECT * from message where _ID = ?',[ID], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -2081,21 +2065,21 @@ function sortListSearch(arr, callback)
 
 function updateStatusUser(IDuser,status,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('UPDATE user set status = ? WHERE _ID = ?',[ status , IDuser], function(err, rows){
-							con.end();
+		connection.query('UPDATE user set status = ? WHERE _ID = ?',[ status , IDuser], function(err, rows){
+							connection.release();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
@@ -2115,21 +2099,21 @@ function updateStatusUser(IDuser,status,callback)
 
 function isRoomHaveMessage(IDRoom,callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT * FROM message WHERE _IDRoom = ?',[IDRoom], function(err, rows){
-								con.end();
+		connection.query('SELECT * FROM message WHERE _IDRoom = ?',[IDRoom], function(err, rows){
+								connection.release();
 			if (err)
 			{
 				console.log("Lenh update bi loi");
@@ -2175,21 +2159,21 @@ function setIdKeyArray(arr, callback)
 
 function getFriendOnline(IDuser, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('select user.email from userfriend, user where userfriend._IDuser = ? and userfriend._IDFriend = user._ID and user.status = 1',[IDuser], function(err, rows){
-						con.end();
+		connection.query('select user.email from userfriend, user where userfriend._IDuser = ? and userfriend._IDFriend = user._ID and user.status = 1',[IDuser], function(err, rows){
+						connection.release();
 			if (err)
 			{
 				throw err;
@@ -2205,21 +2189,21 @@ function getFriendOnline(IDuser, callback)
 
 function updateNoneStatusRoom(IDRoom, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('Update roomdetail set status_seen = 0 where _IDRoom = ?',[IDRoom], function(err, res){
-			con.end();
+		connection.query('Update roomdetail set status_seen = 0 where _IDRoom = ?',[IDRoom], function(err, res){
+			connection.release();
 			if (err)
 			{
 				callback(false);
@@ -2234,21 +2218,21 @@ function updateNoneStatusRoom(IDRoom, callback)
 
 function updateUserStatusSeenRoom(IDuser,IDRoom, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('Update roomdetail set status_seen = 1 where _IDRoom = ? and _IDuser = ?',[IDRoom,IDuser], function(err, res){
-			con.end();
+		connection.query('Update roomdetail set status_seen = 1 where _IDRoom = ? and _IDuser = ?',[IDRoom,IDuser], function(err, res){
+			connection.release();
 			if (err)
 			{
 				callback(false);
@@ -2263,21 +2247,21 @@ function updateUserStatusSeenRoom(IDuser,IDRoom, callback)
 
 function getAllUserSeenRoom(IDuser, IDRoom, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('select user._ID, user.name from roomdetail,user where roomdetail.status_seen = 1 and roomdetail._IDRoom = ? and roomdetail._IDuser <> ? and roomdetail._IDuser = user._ID',[IDRoom,IDuser], function(err, rows){
-			con.end();
+		connection.query('select user._ID, user.name from roomdetail,user where roomdetail.status_seen = 1 and roomdetail._IDRoom = ? and roomdetail._IDuser <> ? and roomdetail._IDuser = user._ID',[IDRoom,IDuser], function(err, rows){
+			connection.release();
 			if (err)
 			{
 				callback(rows);
@@ -2292,21 +2276,21 @@ function getAllUserSeenRoom(IDuser, IDRoom, callback)
 
 function isUserSeenStatusRoom(IDuser,IDRoom, callback)
 {
-	var con = mysql.createConnection({
+	var con = mysql.createPool({
 	host: db_host,
 	user: db_username,
 	password: db_password,
 	database: db_name,connectTimeout: db_timeout
 	});
-	con.connect(function(err)
+	con.getConnection(function(err,connection)
 	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('select * from roomdetail where status_seen = 1 and _IDRoom = ? and _IDuser = ?',[IDRoom,IDuser], function(err, rows){
-			con.end();
+		connection.query('select * from roomdetail where status_seen = 1 and _IDRoom = ? and _IDuser = ?',[IDRoom,IDuser], function(err, rows){
+			connection.release();
 			if (rows.length > 0)
 			{
 				callback(true);
