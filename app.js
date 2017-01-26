@@ -1215,7 +1215,6 @@ function listFriend(IDuser,start,callback)
 				});
 				}, function(err) {
 					callback(arr);
-
 				});
 			}
 			else
@@ -1835,14 +1834,14 @@ function listAllRoom(IDuser,start,callback)
 							var avatarRoom = null;
 							var lastMessage = _lastMessage;
 							var lastTime = _lastTime;
-							var countUserInRoom = countUser;
+							var countUserInRoom = 1;
 							var room = {
 								_ID              : _ID,
 								IDRoom      	: IDRoom,
 								nameRoom    	: nameRoom,
 								avatarRoom  	: avatarRoom,
 								lastMessage 	: lastMessage,
-								countUserInRoom : 1,
+								countUserInRoom : countUserInRoom,
 								lastTime        : lastTime
 							};
 							listRoom.push(room);
