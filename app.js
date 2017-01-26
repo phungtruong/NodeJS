@@ -587,7 +587,7 @@ function timKiemUser(search,IDuser,start,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT _ID,name,avatar,status FROM user WHERE _ID <> ? and (email = ? or name like ?) LIMIT '+start+',10',[IDuser, search,'%'+search+'%'], function(err, rows){
+		con.query('SELECT roomdetail._IDRoom, room.name FROM roomdetail JOIN (SELECT _IDRoom, COUNT(_IDRoom) as soluong From roomdetail GROUP BY _IDRoom HAVING COUNT(_IDRoom) > 2) grouproom on grouproom._IDRoom = roomdetail._IDRoom JOIN room on roomdetail._IDRoom = room._ID WHERE roomdetail._IDuser = ? and room.name like ? LIMIT '+start+',10',[IDuser,'%'+search+'%'], function(err, rowsGroup){
 			con.end();
 			if (err)
 			{
@@ -595,7 +595,15 @@ function timKiemUser(search,IDuser,start,callback)
 				console.log("Loi cau lenh truy van");
 				return;
 			}
-			callback(rows);
+			var soluongnhom = rowsGroup.length;
+			if (soluongnhom == 10)
+			{
+				callback(rowsGroup);
+			}
+			else
+			{
+				start -= soluongnhom;
+			}
 			/*
 			con.end();
 			if (err)
@@ -1786,7 +1794,7 @@ function listAllRoom(IDuser,start,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT message.* From message INNER JOIN (SELECT _IDRoom, MAX(_ID) as LastTime FROM message WHERE _IDuser = 39 GROUP BY _IDRoom) roomlasttime ON message._IDRoom = roomlasttime._IDRoom WHERE message._ID = roomlasttime.LastTime ORDER BY message._ID desc LIMIT '+start+',10',[IDuser], function(err, rowsRoom){
+		con.query('SELECT message.* From message INNER JOIN (SELECT _IDRoom, MAX(_ID) as LastTime FROM message WHERE _IDuser = ? GROUP BY _IDRoom) roomlasttime ON message._IDRoom = roomlasttime._IDRoom WHERE message._ID = roomlasttime.LastTime ORDER BY message._ID desc LIMIT '+start+',10',[IDuser], function(err, rowsRoom){
 			con.end();
 			var listRoom = [];
 			async.each(rowsRoom, function(item, cb){
