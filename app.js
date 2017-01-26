@@ -1061,7 +1061,7 @@ function joinRoom(IDuser, socket)
 	});
 }
 
-function getIdRoom(manguser,callback)
+function getIdRoomAndIsGroup(manguser,callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -1077,7 +1077,7 @@ function getIdRoom(manguser,callback)
 			return;
 		}
 		tachMangUserThanhChuoi(manguser, function(chuoi){
-			con.query('SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?',[manguser.length], function(err, rows){
+			con.query('SELECT * FROM room WHERE _ID in (SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?)',[manguser.length], function(err, rows){
 			con.end();
 			if (err)
 			{
@@ -1085,7 +1085,7 @@ function getIdRoom(manguser,callback)
 				console.log("Loi cau lenh truy van");
 				return;
 			}
-			callback(rows[0]._IDRoom);
+			callback(rows[0]);
 			});
 		});
 	});
@@ -1137,22 +1137,21 @@ function listFriendOnline(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoom(manguser, function(_IDRoom){
-						var IDRoom = _IDRoom;
-						countUserInRoom(_IDRoom, function(countUser){
+					getIdRoomAndIsGroup(manguser, function(room){
+						var IDRoom = room._ID;
+						var IsGroup = room.IsGroup;
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
 							avatar  		: avatar,
 							status  		: status,
 							_IDRoom 		: IDRoom,
-							countUserInRoom : countUser
+							countUserInRoom : IsGroup
 							};
 							arr.push(friend);
 							cb();
-						});
 					
-				});
+					});
 				}, function(err) {
 					callback(arr);
 
@@ -1198,21 +1197,20 @@ function listFriend(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoom(manguser, function(_IDRoom){
-						var IDRoom = _IDRoom;
-						countUserInRoom(_IDRoom, function(countUser){
+					getIdRoomAndIsGroup(manguser, function(room){
+						var IDRoom = room._ID;
+						var IsGroup = room.IsGroup;
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
 							avatar  		: avatar,
 							status  		: status,
 							_IDRoom 		: IDRoom,
-							countUserInRoom : countUser
+							countUserInRoom : IsGroup
 							};
 							arr.push(friend);
 							cb();
-						});
-				});
+					});
 				}, function(err) {
 					callback(arr);
 				});
