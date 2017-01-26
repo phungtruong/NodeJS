@@ -1794,7 +1794,7 @@ function listAllRoom(IDuser,start,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT message.*,room.name,room.IsGroup From message INNER JOIN (SELECT _IDRoom, MAX(_ID) as LastTime FROM message WHERE _IDuser = 39 GROUP BY _IDRoom) roomlasttime ON message._IDRoom = roomlasttime._IDRoom JOIN room ON message._IDRoom = room._ID WHERE message._ID = roomlasttime.LastTime ORDER BY message._ID desc LIMIT '+start+',10',[IDuser], function(err, rowsRoom){
+		con.query('SELECT message.*,room.name,room.IsGroup From message INNER JOIN (SELECT _IDRoom, MAX(_ID) as LastTime FROM message WHERE _IDuser = ? GROUP BY _IDRoom) roomlasttime ON message._IDRoom = roomlasttime._IDRoom JOIN room ON message._IDRoom = room._ID WHERE message._ID = roomlasttime.LastTime ORDER BY message._ID desc LIMIT '+start+',10',[IDuser], function(err, rowsRoom){
 			con.end();
 			var listRoom = [];
 			async.each(rowsRoom, function(item, cb){
