@@ -913,8 +913,8 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 						{
 							var room = {
 								_ID  : 0,
-								name : name +'&'+ nameFriend,
-								IsEmpty : 1
+								name : null,
+								IsGroup : 0
 							};
 							con.query('INSERT INTO room SET ?', room, function(err,res){
 								if (err) 
@@ -1679,7 +1679,7 @@ function taoRoom(manguser, nameGroup, IDuser, callback)
 		var room = {
 				_ID  : 0,
 			    name : nameGroup,
-				IsEmpty : 1
+				IsGroup : 1
 	    };
 		con.query('INSERT INTO room SET ?', room, function(err,res){
 		if (err) 
@@ -1794,7 +1794,7 @@ function listAllRoom(IDuser,start,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT message.* From message INNER JOIN (SELECT _IDRoom, MAX(_ID) as LastTime FROM message WHERE _IDuser = ? GROUP BY _IDRoom) roomlasttime ON message._IDRoom = roomlasttime._IDRoom WHERE message._ID = roomlasttime.LastTime ORDER BY message._ID desc LIMIT '+start+',10',[IDuser], function(err, rowsRoom){
+		con.query('SELECT message.*,room.name,room.IsGroup From message INNER JOIN (SELECT _IDRoom, MAX(_ID) as LastTime FROM message WHERE _IDuser = 39 GROUP BY _IDRoom) roomlasttime ON message._IDRoom = roomlasttime._IDRoom JOIN room ON message._IDRoom = room._ID WHERE message._ID = roomlasttime.LastTime ORDER BY message._ID desc LIMIT '+start+',10',[IDuser], function(err, rowsRoom){
 			con.end();
 			var listRoom = [];
 			async.each(rowsRoom, function(item, cb){
@@ -1802,8 +1802,9 @@ function listAllRoom(IDuser,start,callback)
 				var _IDRoom = item._IDRoom;
 				var _lastMessage = item.Message;
 				var _lastTime = item.Time;
-				countUserInRoom(_IDRoom, function(countUser){
-					if (countUser == 2)
+				var IsGroup = item.IsGroup;
+				var _nameRoom = item.name;
+				if (IsGroup == 0)
 					{
 						//room 2 nguoi
 						getUserInRoomLoaiBoIDuser(_IDRoom, IDuser, function(userInRoom){
@@ -1829,9 +1830,8 @@ function listAllRoom(IDuser,start,callback)
 					else
 					{
 						//room group 3 nguoi tro len
-						getRoom(_IDRoom, function(room){
 							var IDRoom = _IDRoom;
-							var nameRoom = room[0].name;
+							var nameRoom = _nameRoom;
 							var avatarRoom = null;
 							var lastMessage = _lastMessage;
 							var lastTime = _lastTime;
@@ -1847,9 +1847,7 @@ function listAllRoom(IDuser,start,callback)
 							};
 							listRoom.push(room);
 							cb();
-						});
 					}
-				});
 			}, function(err){
 				callback(listRoom);
 				return;
