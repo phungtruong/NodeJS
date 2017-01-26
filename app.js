@@ -1813,7 +1813,7 @@ function listAllRoom(IDuser,start,callback)
 							var avatarRoom = userInRoom[0].avatar;
 							var lastMessage = _lastMessage;
 							var lastTime = _lastTime;
-							var countUserInRoom = countUser;
+							var countUserInRoom = 0;
 							var room = {
 								_ID              : _ID,
 								IDRoom      	: IDRoom,
@@ -1842,7 +1842,7 @@ function listAllRoom(IDuser,start,callback)
 								nameRoom    	: nameRoom,
 								avatarRoom  	: avatarRoom,
 								lastMessage 	: lastMessage,
-								countUserInRoom : countUserInRoom,
+								countUserInRoom : 1,
 								lastTime        : lastTime
 							};
 							listRoom.push(room);
