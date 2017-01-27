@@ -242,6 +242,35 @@ app.post('/list-friend-online', function(req, res){
 	});
 });
 
+app.get('/list-friend-search', function(req, res){
+    var iduser = req.query.IDuser;
+	var start = req.query.start;
+	var search = req.query.search;
+	timKiemFriend(search, iduser, start, function(result){
+		sortListFriend(result, function(arr){
+			res.json(arr);
+		});
+	});
+});
+
+app.get('/list-group-search', function(req, res){
+    var iduser = req.query.IDuser;
+	var start = req.query.start;
+	var search = req.query.search;
+	timKiemGroup(search, iduser, start, function(result){
+		res.json(result);
+	});
+});
+
+app.get('/list-people-search', function(req, res){
+    var iduser = req.query.IDuser;
+	var start = req.query.start;
+	var search = req.query.search;
+	timKiemPeople(search, iduser, start, function(result){
+		res.json(result);
+	});
+});
+
 app.post('/list-all-room', function(req, res){
     var iduser = req.body.IDuser;
 	var start = req.body.start;
@@ -571,8 +600,7 @@ function dangNhapUser(email, password, callback)
 		});
 	});
 }
-
-function timKiemUser(search,IDuser,start,callback)
+function timKiemPeople(search,IDuser,start,callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -587,7 +615,7 @@ function timKiemUser(search,IDuser,start,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT roomdetail._IDRoom, room.name FROM roomdetail JOIN (SELECT _IDRoom, COUNT(_IDRoom) as soluong From roomdetail GROUP BY _IDRoom HAVING COUNT(_IDRoom) > 2) grouproom on grouproom._IDRoom = roomdetail._IDRoom JOIN room on roomdetail._IDRoom = room._ID WHERE roomdetail._IDuser = ? and room.name like ? LIMIT '+start+',10',[IDuser,'%'+search+'%'], function(err, rowsGroup){
+		con.query('SELECT _ID, name, avatar FROM user WHERE (email = ? or name like ?) and _ID <> ? and _ID not in (SELECT u._ID FROM user u, userfriend uf WHERE u._ID = uf._IDFriend and uf._IDuser = ?) LIMIT '+start+',10',[search,'%'+search+'%',IDuser,IDuser], function(err, rowsPeople){
 			con.end();
 			if (err)
 			{
@@ -595,15 +623,93 @@ function timKiemUser(search,IDuser,start,callback)
 				console.log("Loi cau lenh truy van");
 				return;
 			}
-			var soluongnhom = rowsGroup.length;
-			if (soluongnhom == 10)
+			callback(rowsPeople);
+		});
+	});
+}
+
+function timKiemFriend(search,IDuser,start,callback)
+{
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			return;
+		}
+		con.query('SELECT u.* FROM userfriend uf, user u WHERE uf._IDFriend = u._ID and uf._IDuser = ? and (u.name like ? or u.email = ?) LIMIT '+start+',10',[IDuser,'%'+search+'%',search], function(err, rowsFriend){
+			con.end();
+			if (err)
 			{
-				callback(rowsGroup);
+				throw err;
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			var arr = [];
+			if (rowsFriend.length > 0)
+			{
+				async.forEach(rowsFriend, function (item, cb){
+					var manguser = [IDuser, item._ID];
+					var _ID = item._ID;
+					var name = item.name;
+					var avatar = item.avatar;
+					var status = item.status;
+					getIdRoomAndIsGroup(manguser, function(room){
+						var IDRoom = room._ID;
+						var IsGroup = room.IsGroup;
+							var friend = {
+							_ID     		: _ID,
+							name    		: name,
+							avatar  		: avatar,
+							status  		: status,
+							_IDRoom 		: IDRoom,
+							countUserInRoom : IsGroup
+							};
+							arr.push(friend);
+							cb();
+					});
+				}, function(err) {
+					callback(arr);
+
+				});
 			}
 			else
 			{
-				start -= soluongnhom;
+				callback(arr);
 			}
+		});
+	});
+}
+function timKiemGroup(search,IDuser,start,callback)
+{
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			return;
+		}
+		con.query('SELECT r.* FROM room r, roomdetail rd WHERE r._ID = rd._IDRoom and rd._IDuser = ? and r.IsGroup = 1 and r.name like ? LIMIT '+start+',10',[IDuser,'%'+search+'%'], function(err, rowsGroup){
+			con.end();
+			if (err)
+			{
+				throw err;
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			callback(rowsGroup);
 			/*
 			con.end();
 			if (err)
@@ -734,7 +840,6 @@ function timKiemUser(search,IDuser,start,callback)
 			});
 			*/
 		});
-
 	});
 }
 
