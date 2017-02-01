@@ -442,11 +442,9 @@ socketio.on('connection',function(socket)
 			var message = mangdacat[4];
 			updateNoneStatusRoom(IDRoom, function(result){
 				insertMessage(IDRoom, IDuser, message, function(result, id){
-					getMessage(id, function(msg){
-						var time = msg.Time;
-						socketio.to(IDRoom+'').emit('server-gui-message',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
-						socketio.to(IDRoom+'').emit('server-gui-message-in-room',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
-					});
+					var time = Date.now();
+					socketio.to(IDRoom+'').emit('server-gui-message',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
+					socketio.to(IDRoom+'').emit('server-gui-message-in-room',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
 				});
 			});
 
