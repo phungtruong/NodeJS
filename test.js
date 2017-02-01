@@ -34,9 +34,8 @@ app.get('/', function(req,res){
 });
 
 app.get('/test', function(req,res){
-	getUser(function(result){
-		res.end(JSON.stringify(result));
-	});
+	var date = new Date();
+	console.log(date);
 });
 
 function getUser(callback)
