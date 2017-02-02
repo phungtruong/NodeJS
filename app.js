@@ -660,16 +660,15 @@ function timKiemFriend(search,IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoomAndIsGroup(manguser, function(room){
-						var IDRoom = room._ID;
-						var IsGroup = room.IsGroup;
+					getIdRoom(manguser, function(_IDRoom){
+						var IDRoom = _IDRoom;
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
 							avatar  		: avatar,
 							status  		: status,
 							_IDRoom 		: IDRoom,
-							countUserInRoom : IsGroup
+							countUserInRoom : 0
 							};
 							arr.push(friend);
 							cb();
@@ -1166,7 +1165,7 @@ function joinRoom(IDuser, socket)
 	});
 }
 
-function getIdRoomAndIsGroup(manguser,callback)
+function getIdRoom(manguser,callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -1182,7 +1181,7 @@ function getIdRoomAndIsGroup(manguser,callback)
 			return;
 		}
 		tachMangUserThanhChuoi(manguser, function(chuoi){
-			con.query('SELECT * FROM room WHERE _ID in (SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?)',[manguser.length], function(err, rows){
+			con.query('SELECT _ID FROM room WHERE IsGroup = 0 and _ID in (SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?)',[manguser.length], function(err, rows){
 			con.end();
 			if (err)
 			{
@@ -1190,7 +1189,7 @@ function getIdRoomAndIsGroup(manguser,callback)
 				console.log("Loi cau lenh truy van");
 				return;
 			}
-			callback(rows[0]);
+			callback(rows[0]._ID);
 			});
 		});
 	});
@@ -1242,9 +1241,9 @@ function listFriendOnline(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoomAndIsGroup(manguser, function(room){
-						var IDRoom = room._ID;
-						var IsGroup = room.IsGroup;
+					getIdRoom(manguser, function(_IDRoom){
+						var IDRoom = _IDRoom;
+						var IsGroup = 0;
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
@@ -1302,9 +1301,9 @@ function listFriend(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoomAndIsGroup(manguser, function(room){
-						var IDRoom = room._ID;
-						var IsGroup = room.IsGroup;
+					getIdRoom(manguser, function(_IDRoom){
+						var IDRoom = _IDRoom;
+						var IsGroup = 0;
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
