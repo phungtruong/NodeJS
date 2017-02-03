@@ -711,7 +711,7 @@ function timKiemFriend(search,IDuser,start,callback)
 					var avatar = item.avatar;
 					var status = item.status;
 					getIdRoom(manguser, function(room){
-						var IDRoom = room._ID;
+						var IDRoom = room._IDRoom;
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
@@ -1231,15 +1231,15 @@ function getIdRoom(manguser,callback)
 			return;
 		}
 		tachMangUserThanhChuoi(manguser, function(chuoi){
-			con.query('SELECT * FROM room WHERE IsGroup = 0 and _ID in (SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?)',[manguser.length], function(err, rows){
-			con.end();
-			if (err)
-			{
-				throw err;
-				console.log("Loi cau lenh truy van");
-				return;
-			}
-			callback(rows[0]);
+			con.query('SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?',[manguser.length], function(err, rows){
+				con.end();
+				if (err)
+				{
+					throw err;
+					console.log("Loi cau lenh truy van");
+					return;
+				}
+				callback(rows[0]);
 			});
 		});
 	});
@@ -1292,7 +1292,7 @@ function listFriendOnline(IDuser,start,callback)
 					var avatar = item.avatar;
 					var status = item.status;
 					getIdRoom(manguser, function(room){
-						var IDRoom = room._ID;
+						var IDRoom = room._IDRoom;
 						var IsGroup = 0;
 							var friend = {
 							_ID     		: _ID,
@@ -1352,7 +1352,7 @@ function listFriend(IDuser,start,callback)
 					var avatar = item.avatar;
 					var status = item.status;
 					getIdRoom(manguser, function(room){
-						var IDRoom = room._ID;
+						var IDRoom = room._IDRoom;
 						var IsGroup = 0;
 							var friend = {
 							_ID     		: _ID,
