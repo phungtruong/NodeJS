@@ -1231,7 +1231,7 @@ function getIdRoom(manguser,callback)
 			return;
 		}
 		tachMangUserThanhChuoi(manguser, function(chuoi){
-			con.query('SELECT _ID FROM room WHERE IsGroup = 0 and _ID in (SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?)',[manguser.length], function(err, rows){
+			con.query('SELECT * FROM room WHERE IsGroup = 0 and _ID in (SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?)',[manguser.length], function(err, rows){
 			con.end();
 			if (err)
 			{
