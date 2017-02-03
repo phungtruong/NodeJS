@@ -42,6 +42,16 @@ app.get('/test', function(req,res){
 	});
 });
 
+app.post('/is-User-Available', function(req, res){
+	var email = req.body.email;
+	isUserAvailable(email, function(result){
+		var success = {
+			success : result
+		}
+		res.end(JSON.stringify(success));
+	});
+});
+
 app.post('/dang-ky', function(req, res){
 	var taikhoan = {
 			_ID          : 0,
@@ -558,6 +568,46 @@ function themUser(user,callback){
 							return;
 						}
 					});
+				}
+			}
+		});
+	});	
+}
+
+function isUserAvailable(email,callback){
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
+	});
+	con.connect(function(err)
+	{
+		if(err)
+		{
+			console.log('Error connecting to Db');
+			callback(false);
+			return;
+		}
+		con.query('SELECT * FROM user Where email = ?',[email], function(err,rows)
+		{
+			if (err)
+			{
+				console.log("Loi kiem tra user");
+				callback(false);
+				return;
+			}
+			else
+			{
+				if (rows.length > 0)
+				{
+					callback(true);
+					return;
+				}
+				else
+				{
+					callback(false);
+					return;
 				}
 			}
 		});
