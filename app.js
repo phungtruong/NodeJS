@@ -710,8 +710,8 @@ function timKiemFriend(search,IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoom(manguser, function(_IDRoom){
-						var IDRoom = _IDRoom;
+					getIdRoom(manguser, function(room){
+						var IDRoom = room._ID;
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
@@ -1239,7 +1239,7 @@ function getIdRoom(manguser,callback)
 				console.log("Loi cau lenh truy van");
 				return;
 			}
-			callback(rows[0]._ID);
+			callback(rows[0]);
 			});
 		});
 	});
@@ -1291,8 +1291,8 @@ function listFriendOnline(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoom(manguser, function(_IDRoom){
-						var IDRoom = _IDRoom;
+					getIdRoom(manguser, function(room){
+						var IDRoom = room._ID;
 						var IsGroup = 0;
 							var friend = {
 							_ID     		: _ID,
@@ -1351,8 +1351,8 @@ function listFriend(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoom(manguser, function(_IDRoom){
-						var IDRoom = _IDRoom;
+					getIdRoom(manguser, function(room){
+						var IDRoom = room._ID;
 						var IsGroup = 0;
 							var friend = {
 							_ID     		: _ID,
