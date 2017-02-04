@@ -1972,7 +1972,7 @@ function listAllRoom(IDuser,start,callback)
 								avatarRoom  	: avatarRoom,
 								lastMessage 	: lastMessage,
 								countUserInRoom : countUserInRoom,
-								lastTime        : lastTime
+								lastTime        : lastTime,
 								_IDuser         : _IDuser,
 								status_seen     : status_seen
 							};
