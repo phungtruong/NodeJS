@@ -1953,6 +1953,8 @@ function listAllRoom(IDuser,start,callback)
 				var _lastTime = item.Time;
 				var IsGroup = item.IsGroup;
 				var _nameRoom = item.name;
+				var _IDuser = item._IDuser;
+				var status_seen = item.status_seen;
 				if (IsGroup == 0)
 					{
 						//room 2 nguoi
@@ -1971,6 +1973,8 @@ function listAllRoom(IDuser,start,callback)
 								lastMessage 	: lastMessage,
 								countUserInRoom : countUserInRoom,
 								lastTime        : lastTime
+								_IDuser         : _IDuser,
+								status_seen     : status_seen
 							};
 							listRoom.push(room);
 							cb();
@@ -1992,7 +1996,9 @@ function listAllRoom(IDuser,start,callback)
 								avatarRoom  	: avatarRoom,
 								lastMessage 	: lastMessage,
 								countUserInRoom : countUserInRoom,
-								lastTime        : lastTime
+								lastTime        : lastTime,
+								_IDuser         : _IDuser,
+								status_seen     : status_seen
 							};
 							listRoom.push(room);
 							cb();
