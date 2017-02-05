@@ -1236,6 +1236,7 @@ function getIdRoom(manguser,callback)
 					console.log("Loi cau lenh truy van");
 					return;
 				}
+				console.log(rows[0]._IDRoom+"fsdfsdfsdfsdf");
 				callback(rows[0]);
 		});
 	});
