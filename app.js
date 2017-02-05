@@ -1228,8 +1228,7 @@ function getIdRoom(manguser,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		tachMangUserThanhChuoi(manguser, function(chuoi){
-			con.query('SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?',[manguser.length], function(err, rows){
+		con.query('SELECT roomdetail._IDRoom FROM roomdetail JOIN (SELECT * FROM roomdetail WHERE _IDuser = ?) one ON one._IDRoom = roomdetail._IDRoom and roomdetail._IDuser = ? JOIN room on room._ID = roomdetail._IDRoom and room.IsGroup = 0',[manguser[0],manguser[1]], function(err, rows){
 				con.end();
 				if (err)
 				{
@@ -1238,7 +1237,6 @@ function getIdRoom(manguser,callback)
 					return;
 				}
 				callback(rows[0]);
-			});
 		});
 	});
 }
