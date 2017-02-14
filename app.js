@@ -9,8 +9,8 @@ var async = require('async');
 var connect = require('connect');
 
 var db_host = 'sql6.freemysqlhosting.net';
-var db_username = 'sql6155240';
-var db_password = 'GGINPQBYdS';
+var db_username = 'sql6158856';
+var db_password = 'IRS943sLwQ';
 var db_name = 'sql6155240';
 var db_timeout = 10000000;
 /*
@@ -1236,7 +1236,6 @@ function getIdRoom(manguser,callback)
 					console.log("Loi cau lenh truy van");
 					return;
 				}
-				console.log(rows[0]._IDRoom+"fsdfsdfsdfsdf");
 				callback(rows[0]);
 		});
 	});
