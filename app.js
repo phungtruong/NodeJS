@@ -7,19 +7,10 @@ var mysql = require('mysql');
 var fs = require('fs');
 var async = require('async');
 var connect = require('connect');
-
-var db_host = 'sql6.freemysqlhosting.net';
-var db_username = 'sql6158856';
-var db_password = 'IRS943sLwQ';
-var db_name = 'sql6158856';
-var db_timeout = 10000000;
-/*
-var db_host = 'localhost';
-var db_username = 'root';
-var db_password = '';
-var db_name = 'usermanage';
-var db_timeout = 10000000;
-*/
+var db_host = 'sql12.freemysqlhosting.net';
+var db_username = 'sql12176022';
+var db_password = 'LmMM9zuYYf';
+var db_name = 'sql12176022';
 app.use(express.static(__dirname + '/public'));
 app.use(connect.cookieParser());
 app.use(connect.logger('dev'));
@@ -36,20 +27,25 @@ app.get('/', function(req,res){
 });
 
 app.get('/test', function(req,res){
-	var IDuser = 39;
-	getUser(IDuser, function(result){
-		res.end(JSON.stringify(result));
+	var con = mysql.createConnection({
+	host: db_host,
+	user: db_username,
+	password: db_password,
+	database: db_name
 	});
-});
-
-app.post('/is-User-Available', function(req, res){
-	var email = req.body.email;
-	isUserAvailable(email, function(result){
-		var success = {
-			success : result
+	con.connect(function(err)
+	{
+		if (err)
+		{
+			res.end('connection fail');
+			con.end();
 		}
-		res.end(JSON.stringify(success));
-	});
+		else
+		{
+			res.end('connection oke');
+			con.end();
+		}
+	});	
 });
 
 app.post('/dang-ky', function(req, res){
@@ -252,41 +248,14 @@ app.post('/list-friend-online', function(req, res){
 	});
 });
 
-app.get('/list-friend-search', function(req, res){
-    var iduser = req.query.IDuser;
-	var start = req.query.start;
-	var search = req.query.search;
-	timKiemFriend(search, iduser, start, function(result){
-		sortListFriend(result, function(arr){
-			res.json(arr);
-		});
-	});
-});
-
-app.get('/list-group-search', function(req, res){
-    var iduser = req.query.IDuser;
-	var start = req.query.start;
-	var search = req.query.search;
-	timKiemGroup(search, iduser, start, function(result){
-		res.json(result);
-	});
-});
-
-app.get('/list-people-search', function(req, res){
-    var iduser = req.query.IDuser;
-	var start = req.query.start;
-	var search = req.query.search;
-	timKiemPeople(search, iduser, start, function(result){
-		res.json(result);
-	});
-});
-
 app.post('/list-all-room', function(req, res){
     var iduser = req.body.IDuser;
 	var start = req.body.start;
-	listAllRoom(iduser,start, function(listroom){
-		sortListAllRoom(listroom, function(output){
-			res.json(output);
+	listAllRoom(iduser, function(result){
+		sortListRoomMessageTime(result , function(arrnew){
+			listAllRoomPage(arrnew, start, function(arrone){
+				res.json(arrone);
+			});
 		});
 	});
 });
@@ -332,9 +301,7 @@ app.get('/search-user', function(req,res){
 	var search = req.query.search;
 	var start = req.query.start;
 	var IDuser = req.query.IDuser;
-	timKiemUser(search,IDuser,start, function(ListUser){
-		res.json(ListUser);
-		/*
+	timKiemUser(search, IDuser, function(arrRoom, arrFriend, arrRequest, arrAccept, arrNone){
 		sortListAllRoomTwo(arrRoom, function(arrNewRoom){
 			sortListFriend(arrFriend, function(arrNewFriend){
 				sortListFriend(arrRequest, function(arrNewRequest){
@@ -349,7 +316,7 @@ app.get('/search-user', function(req,res){
 				});
 			});
 		});
-		*/
+		
 	});
 });
 
@@ -452,9 +419,11 @@ socketio.on('connection',function(socket)
 			var message = mangdacat[4];
 			updateNoneStatusRoom(IDRoom, function(result){
 				insertMessage(IDRoom, IDuser, message, function(result, id){
-						var time = new Date();
+					getMessage(id, function(msg){
+						var time = msg.Time;
 						socketio.to(IDRoom+'').emit('server-gui-message',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
 						socketio.to(IDRoom+'').emit('server-gui-message-in-room',{IDRoom : IDRoom, IDuser : IDuser, message: message, name : name, avatar : avatar, time:time});
+					});
 				});
 			});
 
@@ -514,6 +483,8 @@ socketio.on('connection',function(socket)
 	});
 });
 
+
+
 function catChuoi(chuoi,len, callback){
 	var mangdacat = chuoi.split('#',len);
 	callback(mangdacat);
@@ -572,46 +543,6 @@ function themUser(user,callback){
 	});	
 }
 
-function isUserAvailable(email,callback){
-	var con = mysql.createConnection({
-	host: db_host,
-	user: db_username,
-	password: db_password,
-	database: db_name
-	});
-	con.connect(function(err)
-	{
-		if(err)
-		{
-			console.log('Error connecting to Db');
-			callback(false);
-			return;
-		}
-		con.query('SELECT * FROM user Where email = ?',[email], function(err,rows)
-		{
-			if (err)
-			{
-				console.log("Loi kiem tra user");
-				callback(false);
-				return;
-			}
-			else
-			{
-				if (rows.length > 0)
-				{
-					callback(true);
-					return;
-				}
-				else
-				{
-					callback(false);
-					return;
-				}
-			}
-		});
-	});	
-}
-
 function dangNhapUser(email, password, callback)
 {
 	var con = mysql.createConnection({
@@ -648,35 +579,8 @@ function dangNhapUser(email, password, callback)
 		});
 	});
 }
-function timKiemPeople(search,IDuser,start,callback)
-{
-	var con = mysql.createConnection({
-	host: db_host,
-	user: db_username,
-	password: db_password,
-	database: db_name
-	});
-	con.connect(function(err)
-	{
-		if(err)
-		{
-			console.log('Error connecting to Db');
-			return;
-		}
-		con.query('SELECT _ID, name, avatar FROM user WHERE (email = ? or name like ?) and _ID <> ? and _ID not in (SELECT u._ID FROM user u, userfriend uf WHERE u._ID = uf._IDFriend and uf._IDuser = ?) LIMIT '+start+',10',[search,'%'+search+'%',IDuser,IDuser], function(err, rowsPeople){
-			con.end();
-			if (err)
-			{
-				throw err;
-				console.log("Loi cau lenh truy van");
-				return;
-			}
-			callback(rowsPeople);
-		});
-	});
-}
 
-function timKiemFriend(search,IDuser,start,callback)
+function timKiemUser(search,IDuser,callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -691,73 +595,7 @@ function timKiemFriend(search,IDuser,start,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT u.* FROM userfriend uf, user u WHERE uf._IDFriend = u._ID and uf._IDuser = ? and (u.name like ? or u.email = ?) LIMIT '+start+',10',[IDuser,'%'+search+'%',search], function(err, rowsFriend){
-			con.end();
-			if (err)
-			{
-				throw err;
-				console.log("Loi cau lenh truy van");
-				return;
-			}
-			var arr = [];
-			if (rowsFriend.length > 0)
-			{
-				async.forEach(rowsFriend, function (item, cb){
-					var manguser = [IDuser, item._ID];
-					var _ID = item._ID;
-					var name = item.name;
-					var avatar = item.avatar;
-					var status = item.status;
-					getIdRoom(manguser, function(room){
-						var IDRoom = room._IDRoom;
-							var friend = {
-							_ID     		: _ID,
-							name    		: name,
-							avatar  		: avatar,
-							status  		: status,
-							_IDRoom 		: IDRoom,
-							countUserInRoom : 0
-							};
-							arr.push(friend);
-							cb();
-					});
-				}, function(err) {
-					callback(arr);
-
-				});
-			}
-			else
-			{
-				callback(arr);
-			}
-		});
-	});
-}
-function timKiemGroup(search,IDuser,start,callback)
-{
-	var con = mysql.createConnection({
-	host: db_host,
-	user: db_username,
-	password: db_password,
-	database: db_name
-	});
-	con.connect(function(err)
-	{
-		if(err)
-		{
-			console.log('Error connecting to Db');
-			return;
-		}
-		con.query('SELECT r.* FROM room r, roomdetail rd WHERE r._ID = rd._IDRoom and rd._IDuser = ? and r.IsGroup = 1 and r.name like ? LIMIT '+start+',10',[IDuser,'%'+search+'%'], function(err, rowsGroup){
-			con.end();
-			if (err)
-			{
-				throw err;
-				console.log("Loi cau lenh truy van");
-				return;
-			}
-			callback(rowsGroup);
-			/*
+		con.query('SELECT _ID,name,avatar,status FROM user WHERE _ID <> ? and (email = ? or name like ?)',[IDuser, search,'%'+search+'%'], function(err, rows){
 			con.end();
 			if (err)
 			{
@@ -885,7 +723,6 @@ function timKiemGroup(search,IDuser,start,callback)
 				});
 			});
 			});
-			*/
 		});
 	});
 }
@@ -1065,8 +902,8 @@ function insertFriend(IDuser, IDFriend, name, nameFriend,callback){
 						{
 							var room = {
 								_ID  : 0,
-								name : null,
-								IsGroup : 0
+								name : name +'&'+ nameFriend,
+								IsEmpty : 1
 							};
 							con.query('INSERT INTO room SET ?', room, function(err,res){
 								if (err) 
@@ -1228,15 +1065,17 @@ function getIdRoom(manguser,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT roomdetail._IDRoom FROM roomdetail JOIN (SELECT * FROM roomdetail WHERE _IDuser = ?) one ON one._IDRoom = roomdetail._IDRoom and roomdetail._IDuser = ? JOIN room on room._ID = roomdetail._IDRoom and room.IsGroup = 0',[manguser[0],manguser[1]], function(err, rows){
-				con.end();
-				if (err)
-				{
-					throw err;
-					console.log("Loi cau lenh truy van");
-					return;
-				}
-				callback(rows[0]);
+		tachMangUserThanhChuoi(manguser, function(chuoi){
+			con.query('SELECT _IDRoom FROM roomdetail WHERE _IDuser IN '+chuoi+' GROUP BY _IDRoom HAVING Count(DISTINCT _IDuser) = ?',[manguser.length], function(err, rows){
+			con.end();
+			if (err)
+			{
+				throw err;
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			callback(rows[0]._IDRoom);
+			});
 		});
 	});
 }
@@ -1287,21 +1126,22 @@ function listFriendOnline(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoom(manguser, function(room){
-						var IDRoom = room._IDRoom;
-						var IsGroup = 0;
+					getIdRoom(manguser, function(_IDRoom){
+						var IDRoom = _IDRoom;
+						countUserInRoom(_IDRoom, function(countUser){
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
 							avatar  		: avatar,
 							status  		: status,
 							_IDRoom 		: IDRoom,
-							countUserInRoom : IsGroup
+							countUserInRoom : countUser
 							};
 							arr.push(friend);
 							cb();
+						});
 					
-					});
+				});
 				}, function(err) {
 					callback(arr);
 
@@ -1347,22 +1187,24 @@ function listFriend(IDuser,start,callback)
 					var name = item.name;
 					var avatar = item.avatar;
 					var status = item.status;
-					getIdRoom(manguser, function(room){
-						var IDRoom = room._IDRoom;
-						var IsGroup = 0;
+					getIdRoom(manguser, function(_IDRoom){
+						var IDRoom = _IDRoom;
+						countUserInRoom(_IDRoom, function(countUser){
 							var friend = {
 							_ID     		: _ID,
 							name    		: name,
 							avatar  		: avatar,
 							status  		: status,
 							_IDRoom 		: IDRoom,
-							countUserInRoom : IsGroup
+							countUserInRoom : countUser
 							};
 							arr.push(friend);
 							cb();
-					});
+						});
+				});
 				}, function(err) {
 					callback(arr);
+
 				});
 			}
 			else
@@ -1382,17 +1224,24 @@ function getUser(IDuser,callback)
 	password: db_password,
 	database: db_name
 	});
-	con.connect(function(err) {
+	con.connect(function(err)
+	{
 		if(err)
 		{
 			console.log('Error connecting to Db');
 			return;
 		}
 		con.query('SELECT * FROM user WHERE _ID = ?',[IDuser], function(err, rows){
-    		con.end();
-    		if (err) throw err;
+			con.end();
+			if (err)
+			{
+				throw err;
+				console.log("Loi cau lenh truy van");
+				return;
+			}
 			callback(rows[0]);
-  		});
+
+		});
 	});
 }
 
@@ -1750,12 +1599,13 @@ function getUserInRoom(IDRoom, callback)
 				return;
 			}
 			callback(rows);
+
 			return;
 		});
 	});
 }
 
-function getUserInRoomLoaiBoIDuser(IDRoom,IDuser,callback)
+function getUserInRoomLoaiBoIDuser(IDRoom,IDuser ,callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -1779,6 +1629,7 @@ function getUserInRoomLoaiBoIDuser(IDRoom,IDuser,callback)
 				return;
 			}
 			callback(rows);
+
 			return;
 		});
 	});
@@ -1826,7 +1677,7 @@ function taoRoom(manguser, nameGroup, IDuser, callback)
 		var room = {
 				_ID  : 0,
 			    name : nameGroup,
-				IsGroup : 1
+				IsEmpty : 1
 	    };
 		con.query('INSERT INTO room SET ?', room, function(err,res){
 		if (err) 
@@ -1926,7 +1777,7 @@ function listAllRoomPage(array, start, callback)
 	callback(array.slice(parseInt(start),parseInt(start)+10));
 }
 
-function listAllRoom(IDuser,start,callback)
+function listAllRoom(IDuser,callback)
 {
 	var con = mysql.createConnection({
 	host: db_host,
@@ -1941,68 +1792,86 @@ function listAllRoom(IDuser,start,callback)
 			console.log('Error connecting to Db');
 			return;
 		}
-		con.query('SELECT recentroom.*,rd.status_seen FROM roomdetail rd JOIN (SELECT message.*,room.name,room.IsGroup From message INNER JOIN (SELECT _IDRoom, MAX(_ID) as LastTime FROM message WHERE _IDRoom in (SELECT _IDRoom From roomdetail WHERE _IDuser = ?) GROUP BY _IDRoom) roomlasttime ON message._IDRoom = roomlasttime._IDRoom JOIN room ON message._IDRoom = room._ID WHERE message._ID = roomlasttime.LastTime ORDER BY message._ID desc) recentroom ON recentroom._IDRoom = rd._IDRoom WHERE rd._IDuser = ? LIMIT '+start+',10',[IDuser,IDuser], function(err, rowsRoom){
-			con.end();
-			var listRoom = [];
-			async.each(rowsRoom, function(item, cb){
-				var _ID = item._ID;
-				var _IDRoom = item._IDRoom;
-				var _lastMessage = item.Message;
-				var _lastTime = item.Time;
-				var IsGroup = item.IsGroup;
-				var _nameRoom = item.name;
-				var _IDuser = item._IDuser;
-				var status_seen = item.status_seen;
-				if (IsGroup == 0)
+		con.query('SELECT * FROM roomdetail WHERE _IDuser = ?',[IDuser], function(err, rows){
+							con.end();
+			if (err)
+			{
+				throw err;
+				console.log("Loi cau lenh truy van");
+				return;
+			}
+			var arr = [];
+			async.each(rows, function(item, cb){
+				getUserInRoomLoaiBoIDuser(item._IDRoom,IDuser, function(rowsUser){
+					//chia ra 2 truong hop
+					if (rowsUser.length == 1)
 					{
-						//room 2 nguoi
-						getUserInRoomLoaiBoIDuser(_IDRoom, IDuser, function(userInRoom){
-							var IDRoom = _IDRoom;
-							var nameRoom = userInRoom[0].name;
-							var avatarRoom = userInRoom[0].avatar;
-							var lastMessage = _lastMessage;
-							var lastTime = _lastTime;
-							var countUserInRoom = 0;
-							var room = {
-								_ID              : _ID,
-								IDRoom      	: IDRoom,
-								nameRoom    	: nameRoom,
-								avatarRoom  	: avatarRoom,
-								lastMessage 	: lastMessage,
-								countUserInRoom : countUserInRoom,
-								lastTime        : lastTime,
-								_IDuser         : _IDuser,
-								status_seen     : status_seen
-							};
-							listRoom.push(room);
-							cb();
+						//chat friend
+						isRoomHaveMessage(item._IDRoom, function(result){
+							if (result)
+							{
+								getLastMessageInRoom(item._IDRoom, function(msg){
+									var IDRoom = item._IDRoom;
+									var nameRoom = rowsUser[0].name;
+									var avatarRoom = rowsUser[0].avatar;
+									var lastMessage = msg.Message;
+									var lastMessageTime = msg.Time;
+									var lastTime = msg.Time;
+									var countUserInRoom = rowsUser.length + 1;
+									parseDateToMili(lastMessageTime, function(mili){
+										var object = {
+										IDRoom      	: IDRoom,
+										nameRoom    	: nameRoom,
+										avatarRoom  	: avatarRoom,
+										lastMessage 	: lastMessage,
+										countUserInRoom : countUserInRoom,
+										lastMessageTime : mili,
+										lastTime        : lastTime
+										};
+									arr.push(object);
+									cb();
+									});
+								});	
+							}
+							else
+							{
+								cb();
+							}
 						});
 					}
 					else
 					{
-						//room group 3 nguoi tro len
-							var IDRoom = _IDRoom;
-							var nameRoom = _nameRoom;
-							var avatarRoom = null;
-							var lastMessage = _lastMessage;
-							var lastTime = _lastTime;
-							var countUserInRoom = 1;
-							var room = {
-								_ID              : _ID,
-								IDRoom      	: IDRoom,
-								nameRoom    	: nameRoom,
-								avatarRoom  	: avatarRoom,
-								lastMessage 	: lastMessage,
-								countUserInRoom : countUserInRoom,
-								lastTime        : lastTime,
-								_IDuser         : _IDuser,
-								status_seen     : status_seen
-							};
-							listRoom.push(room);
-							cb();
-					}
-			}, function(err){
-				callback(listRoom);
+						//group chat
+						var IDRoom = item._IDRoom;
+						getRoom(IDRoom, function(rowsRoom){
+							getLastMessageInRoom(rowsRoom[0]._ID, function(msg){
+										var IDRoom = rowsRoom[0]._ID;
+										var nameRoom = rowsRoom[0].name;
+										var avatarRoom = null;
+										var lastMessage = msg.Message;
+										var countUserInRoom = rowsUser.length + 1;
+										var lastMessageTime = msg.Time;
+										var lastTime = msg.Time;
+										parseDateToMili(lastMessageTime, function(mili){
+											var object = {
+											IDRoom      	: IDRoom,
+											nameRoom    	: nameRoom,
+											avatarRoom  	: avatarRoom,
+											lastMessage 	: lastMessage,
+											countUserInRoom : countUserInRoom,
+											lastMessageTime : mili,
+											lastTime        : lastTime
+											};
+											arr.push(object);
+											cb();
+										});
+								});
+							});
+						}
+					});
+				}, 
+				function(err){
+				callback(arr);
 				return;
 			});
 		});
@@ -2139,14 +2008,6 @@ function compareID(a,b) {
   return 0;
 }
 
-function compareRoom(a,b) {
-  if (a._ID > b._ID)
-    return -1;
-  if (a._ID < b._ID)
-    return 1;
-  return 0;
-}
-
 function compareIDRoom(a,b) {
   if (a.IDRoom < b.IDRoom)
     return -1;
@@ -2194,7 +2055,7 @@ function sortListFriend(arr, callback)
 
 function sortListAllRoom(arr, callback)
 {
-	callback(arr.sort(compareRoom));
+	callback(arr.sort(compareIDRoom));
 }
 
 function sortListAllRoomTwo(arr, callback)
@@ -2248,7 +2109,7 @@ function updateStatusUser(IDuser,status,callback)
 				return;
 			}
 		});
-	});
+	})
 }
 
 function isRoomHaveMessage(IDRoom,callback)
